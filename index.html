@@ -4,71 +4,82 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Urban Environment — Scientific Overview</title>
-<meta name="description" content="Scientific overview of habitats, pollution, resources and climate risks for cities. Bilingual (EN/AR), light/dark theme. No scroll animation." />
+<meta name="description" content="Scientific overview of habitats, pollution, resources and climate risks for cities. Bilingual (EN/AR), light/dark theme and scroll animations." />
 <style>
   :root{
-    --bg:#0f1115; --card:#171a21; --text:#f1f5f9; --muted:#a8b3c0; --accent:#22d3ee; --radius:12px;
+    --bg:#0f1115; --card:#171a21; --text:#f1f5f9; --muted:#a8b3c0; --accent:#22d3ee;
+    --accent-2:#7c3aed; --radius:12px;
   }
   body.light{
-    --bg:#fbfbfd; --card:#ffffff; --text:#0a0f16; --muted:#475569; --accent:#0ea5e9;
+    --bg:#fbfbfd; --card:#ffffff; --text:#0a0f16; --muted:#475569; --accent:#0ea5e9; --accent-2:#6d28d9;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
     margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,"Noto Sans",Arial,sans-serif;
     background:var(--bg); color:var(--text); line-height:1.7; -webkit-font-smoothing:antialiased;
-    transition:background .25s,color .25s;
+    transition:background .3s,color .3s;
   }
 
   /* header */
   header{
     position:sticky; top:0; z-index:999;
     display:flex; align-items:center; justify-content:space-between;
-    gap:12px; padding:12px 16px; background:linear-gradient(180deg, rgba(0,0,0,.08), transparent);
+    gap:12px; padding:14px 18px; background:linear-gradient(180deg, rgba(0,0,0,.12), transparent);
     backdrop-filter: blur(6px);
     border-bottom: 1px solid rgba(255,255,255,.03);
   }
   .brand{font-weight:700; font-size:1rem; letter-spacing:.3px}
   .controls{display:flex; gap:8px; align-items:center}
   .btn{
-    border:0; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:600;
-    background:var(--card); color:var(--text); box-shadow: 0 6px 18px rgba(0,0,0,.18);
+    border:0; padding:8px 11px; border-radius:10px; cursor:pointer; font-weight:600;
+    background:var(--card); color:var(--text); box-shadow: 0 6px 18px rgba(0,0,0,.25);
   }
   .small{padding:6px 8px; font-size:.95rem}
 
-  /* container */
-  main.container{max-width:920px; margin:18px auto; padding:16px;}
+  /* article container */
+  main.container{max-width:900px; margin: 18px auto; padding:18px;}
 
+/* top hero */
   .hero{
     background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
-    border-radius: var(--radius); padding:18px; margin-bottom:20px; border:1px solid rgba(255,255,255,.03);
+    border-radius: var(--radius); padding:20px; margin-bottom:24px; border:1px solid rgba(255,255,255,.03);
   }
   .hero h1{margin:0 0 8px; font-size:1.4rem}
   .hero p.lead{margin:0; color:var(--muted); font-size:1rem}
 
-  .article-block{
-    background:var(--card); border-radius:var(--radius); padding:18px; border:1px solid rgba(255,255,255,.03);
+/* content blocks */
+  article.longtext{background:var(--card); border-radius:var(--radius); padding:18px; border:1px solid rgba(255,255,255,.03)}
+  .paragraph{opacity:0; transform:translateY(20px); transition:opacity .6s ease, transform .6s ease;}
+  .paragraph.visible{opacity:1; transform:none;}
+  .para-text{color:var(--text); font-size:1rem; margin-bottom:14px}
+  .para-sub{color:var(--muted); margin-bottom:18px}
+  img.inline{
+    width:100%; max-height:360px; object-fit:cover; border-radius:10px; display:block; margin:18px 0;
+    opacity:0; transform:translateY(14px) scale(.99); transition:opacity .6s ease, transform .6s ease;
   }
-  .article-block p{margin-bottom:16px; color:var(--text); font-size:1rem}
-  .article-block img{width:100%; max-height:420px; object-fit:cover; border-radius:10px; margin:14px 0}
+  img.inline.visible{opacity:1; transform:none}
 
-  footer{max-width:920px; margin:18px auto; padding:12px 16px; color:var(--muted); font-size:.95rem; text-align:center}
+/* small footer */
+  footer{max-width:900px; margin:20px auto; padding:12px 18px; color:var(--muted); font-size:.95rem; text-align:center}
 
-  /* direction */
+/* language direction support */
   :root[dir="rtl"]{direction:rtl}
   :root[dir="ltr"]{direction:ltr}
 
+/* subtle responsive */
   @media (max-width:560px){
+    header{padding:10px}
+    .brand{font-size:.98rem}
     .hero h1{font-size:1.15rem}
   }
+
 </style>
 </head>
 <body>
 
 <header>
-  <div class="brand" id="brandTitle" data-en="Urban Environment — Scientific Overview" data-ar="البيئة الحضرية — عرض علمي">
-    Urban Environment — Scientific Overview
-  </div>
+  <div class="brand" id="brandTitle" data-en="Urban Environment — Scientific Overview" data-ar="البيئة الحضرية — عرض علمي">Urban Environment — Scientific Overview</div>
 
   <div class="controls">
     <button class="btn small" id="themeBtn" title="Toggle light / dark">🌗 Theme</button>
@@ -78,128 +89,132 @@
 
 <main class="container" id="main">
   <section class="hero" aria-hidden="false">
-    <h1 id="heroTitle" data-en="Using Earth Observation to Plan Resilient Cities" data-ar="استخدام رصد الأرض لتخطيط مدن مرنة">
-      Using Earth Observation to Plan Resilient Cities
-    </h1>
+    <h1 id="heroTitle" data-en="Using Earth Observation to Plan Resilient Cities" data-ar="استخدام رصد الأرض لتخطيط مدن مرنة">Using Earth Observation to Plan Resilient Cities</h1>
     <p class="lead" id="heroLead"
        data-en="This article synthesizes scientific evidence on urban habitats, pollution, resource management and climate-driven risks. It describes how planners can integrate satellite Earth observation data to create adaptive, equitable and low-impact urban growth strategies."
        data-ar="تلخّص هذه المقالة الأدلة العلمية حول الموائل الحضرية والتلوث وإدارة الموارد والمخاطر الناتجة عن المناخ. وتصف كيف يمكن للمخططين دمج بيانات رصد الأرض من الأقمار الصناعية لتصميم استراتيجيات نمو حضري مرنة وعادلة ومنخفضة التأثير.">
-      This article synthesizes scientific evidence on urban habitats, pollution, resource management and climate-driven risks. It describes how planners can integrate satellite Earth observation data to create adaptive, equitable and low-impact urban growth strategies.
+       This article synthesizes scientific evidence on urban habitats, pollution, resource management and climate-driven risks. It describes how planners can integrate satellite Earth observation data to create adaptive, equitable and low-impact urban growth strategies.
     </p>
   </section>
 
-  <!-- Single long article (all text in one page). Each element that should translate has both data-en and data-ar -->
-  <article class="article-block" id="article">
+  <article class="longtext" id="article">
+    <!-- We place a long continuous article: each .paragraph has data-en and data-ar -->
+    <div class="paragraph" data-en="Urban regions are complex socio-ecological systems where human well-being depends on the condition of multiple interconnected components: green and blue habitats, air and water quality, energy and material flows, and the resilience of infrastructure. Satellite-based Earth observation provides consistent, spatially explicit, and temporally repeatable data streams that allow planners to monitor land-cover change, surface temperatures, vegetation health, water extents, pollution plumes, and indicators of infrastructure stress. These remote measurements complement ground-based sensors and socio-economic data to create a multi-dimensional picture of urban health."
+                 data-ar="المناطق الحضرية نظم اجتماعية-بيئية معقدة حيث تعتمد رفاهية الإنسان على حالة مكونات مترابطة متعددة: الموائل الخضراء والزرقاء، جودة الهواء والماء، تدفقات الطاقة والمواد، وقدرة البنية التحتية على التحمل. يوفر رصد الأرض عبر الأقمار الصناعية بيانات متسقة ومكانية وبتكرار زمني يسمح للمخططين بمراقبة تغير الغطاء الأرضي ودرجات حرارة السطح وصحة الغطاء النباتي ومجالات المياه وروافد التلوث ومؤشرات إجهاد البنية التحتية. تكمل هذه القياسات البعيدة أجهزة الاستشعار الأرضية والبيانات الاجتماعية-الاقتصادية لتكوين صورة متعددة الأبعاد عن صحة المدينة.">
+      <p class="para-text">Urban regions are complex socio-ecological systems where human well-being depends on the condition of multiple interconnected components: green and blue habitats, air and water quality, energy and material flows, and the resilience of infrastructure. Satellite-based Earth observation provides consistent, spatially explicit, and temporally repeatable data streams that allow planners to monitor land-cover change, surface temperatures, vegetation health, water extents, pollution plumes, and indicators of infrastructure stress. These remote measurements complement ground-based sensors and socio-economic data to create a multi-dimensional picture of urban health.</p>
+    </div>
 
-    <p data-en="Urban regions are complex socio-ecological systems where human well-being depends on multiple interconnected components: green and blue habitats, air and water quality, energy and material flows, and the resilience of infrastructure. Satellite Earth observation provides consistent, spatially explicit and temporally repeatable data streams that allow planners to monitor land-cover change, surface temperatures, vegetation health, water extent and indicators of infrastructure stress. These remote measurements complement ground sensors and socio-economic data to produce a multi-dimensional picture of urban health."
-       data-ar="المناطق الحضرية نظم اجتماعية-بيئية معقدة حيث تعتمد رفاهية الإنسان على مكونات مترابطة متعددة: الموائل الخضراء والزرقاء، جودة الهواء والماء، تدفقات الطاقة والمواد، وقدرة البنية التحتية على التحمل. يوفر رصد الأرض عبر الأقمار الصناعية تدفقات بيانات متسقة ومكانية وبتكرار زمني يسمح للمخططين بمراقبة تغير الغطاء الأرضي ودرجات حرارة السطح وصحة الغطاء النباتي وامتداد المياه ومؤشرات إجهاد البنية التحتية. تكمل هذه القياسات البعيدة أجهزة الاستشعار الأرضية والبيانات الاجتماعية-الاقتصادية لتكوين صورة متعددة الأبعاد عن صحة المدينة.">
-    </p>
+    <img class="inline" src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1400&q=80" alt="Urban and nature interface">
 
-    <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1400&q=80" alt="Urban and nature interface" data-en="Urban and nature interface" data-ar="الواجهة بين الحضر والطبيعة">
+    <div class="paragraph" data-en="Habitats within cities—including parks, street trees, green roofs, wetlands and river corridors—provide essential ecosystem services: cooling through evapotranspiration, stormwater retention, carbon sequestration, habitat for pollinators and birds, and recreational space that benefits mental and physical health. Preserving and expanding such habitats becomes more critical as urban populations grow and as climate extremes (heatwaves, intense storms, droughts) increase frequency and intensity."
+                 data_ar="الموائل داخل المدن — بما في ذلك الحدائق، أشجار الشوارع، الأسطح الخضراء، الأراضي الرطبة وممرات الأنهار — توفر خدمات نظامية أساسية: التبريد من خلال النتح والنتح النتحي، احتجاز مياه الأمطار، احتجاز الكربون، موائل للملقحات والطيور، ومساحات ترفيهية تعزز الصحة النفسية والجسدية. تصبح المحافظة على هذه الموائل وتوسيعها أكثر أهمية مع نمو السكان الحضريين وزيادة تواتر وشدة الظواهر المناخية المتطرفة (موجات الحر، العواصف الشديدة، الجفاف).">
+      <p class="para-text">Habitats within cities—including parks, street trees, green roofs, wetlands and river corridors—provide essential ecosystem services: cooling through evapotranspiration, stormwater retention, carbon sequestration, habitat for pollinators and birds, and recreational space that benefits mental and physical health. Preserving and expanding such habitats becomes more critical as urban populations grow and as climate extremes (heatwaves, intense storms, droughts) increase frequency and intensity.</p>
+    </div>
 
-    <p data-en="Habitats within urban areas — parks, street trees, green roofs, wetlands and riparian corridors — provide essential ecosystem services: cooling via evapotranspiration, stormwater retention, carbon sequestration, habitat for pollinators and birds, and recreational space supporting mental and physical health. Preserving and expanding such habitats is increasingly important as urban populations grow and climate extremes become more frequent and intense."
-       data-ar="توفر الموائل داخل الحضر — كالمتنزهات وأشجار الشوارع والأسطح الخضراء والأراضي الرطبة وممرات الأنهار — خدمات نظامية أساسية: التبريد عبر النتح، احتجاز مياه الأمطار، احتجاز الكربون، موائل للملقحات والطيور، ومساحات ترفيهية تدعم الصحة النفسية والجسدية. تصبح المحافظة على هذه الموائل وتوسيعها أكثر أهمية مع نمو السكان الحضريين وزيادة تواتر وشدة الظواهر المناخية المتطرفة.">
-    </p>
+    <div class="paragraph" data-en="Air pollution in dense urban zones is strongly linked to transportation, industry, and combustion for heating and power. Particulate matter (PM2.5 and PM10), nitrogen oxides, ozone and volatile organic compounds produce both acute and chronic health burdens. Satellite instruments can now track aerosol optical depth, trace gases and emission hotspots, allowing city agencies to map exposure at neighborhood scales and evaluate the effectiveness of interventions such as low-emission zones or cleaner public transport."
+                 data-ar="يرتبط تلوث الهواء في المناطق الحضرية الكثيفة بشكل قوي بالنقل والصناعة والاحتراق للتدفئة والطاقة. تسبب الجسيمات الدقيقة (PM2.5 و PM10) وأكاسيد النيتروجين والأوزون والمركبات العضوية المتطايرة أعباء صحية حادة ومزمنة. تستطيع أجهزة الاستشعار الفضائية اليوم تتبع عمق الامتصاص الهوائي والغازات الشاردة ونقاط انبعاث الملوثات، مما يمكّن الجهات المعنية من رسم خرائط التعرض على مستوى الأحياء وتقييم فعالية التدخلات مثل مناطق الانبعاث المنخفض والنقل العام النظيف.">
+      <p class="para-text">Air pollution in dense urban zones is strongly linked to transportation, industry, and combustion for heating and power. Particulate matter (PM2.5 and PM10), nitrogen oxides, ozone and volatile organic compounds produce both acute and chronic health burdens. Satellite instruments can now track aerosol optical depth, trace gases and emission hotspots, allowing city agencies to map exposure at neighborhood scales and evaluate the effectiveness of interventions such as low-emission zones or cleaner public transport.</p>
+    </div>
 
-    <p data-en="Air pollution in dense urban zones is often driven by transport, industry and combustion for heating and power. Fine particulate matter (PM2.5), nitrogen oxides, ozone and volatile organic compounds contribute both acute and chronic health burdens. Modern satellite instruments can map aerosol optical depth, trace gases and emission hotspots, enabling neighborhood-scale exposure assessments and the evaluation of interventions such as low-emission zones and cleaner public transport."
-       data_ar="يرتبط تلوث الهواء في المناطق الحضرية الكثيفة غالبًا بالنقل والصناعة والاحتراق من أجل التدفئة والطاقة. تسهم الجسيمات الدقيقة (PM2.5)، أكاسيد النيتروجين، الأوزون والمركبات العضوية المتطايرة في أعباء صحية حادة ومزمنة. تستطيع أجهزة الاستشعار الفضائية الحديثة رسم خرائط لعمق الامتصاص الهوائي والغازات الشاردة ونقاط الانبعاث، مما يمكّن من تقييم التعرض على مستوى الأحياء وتقييم فعالية التدخلات مثل مناطق الانبعاث المنخفض والنقل العام الأنسب.">
-    </p>
+    <img class="inline" src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=1400&q=80" alt="Air pollution over city">
 
-    <img src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=1400&q=80" alt="Air pollution over city" data-en="Air pollution over city" data-ar="تلوث الهواء فوق المدينة">
+    <div class="paragraph" data-en="Freshwater and coastal systems are also impacted by urban activity. Runoff from impervious surfaces transports sediments, nutrients, microplastics and chemicals into waterways. Changing precipitation patterns, intensified storm events and sea-level rise alter flood frequency and water quality. Earth observation provides flood mapping, surface-water extent time series and turbidity indices that inform drainage design, nature-based solutions (like wetlands restoration) and coastal defense planning."
+                 data_ar="تتأثر أنظمة المياه العذبة والساحلية أيضًا بالنشاط الحضري. تنقل الجريان من الأسطح غير المنفذة الرواسب والمغذيات والميكروبلاستيك والمواد الكيميائية إلى المسطحات المائية. تغير أنماط الهطول، وتكثيف الأحداث العاصفة وارتفاع مستوى سطح البحر يغيران تواتر الفيضانات وجودة المياه. يوفر رصد الأرض خرائط للفيضانات وسلاسل زمنية لامتداد المياه السطحية ومؤشرات عكارة تساعد في تصميم شبكات الصرف والحلول الطبيعية مثل استعادة الأراضي الرطبة وتخطيط الدفاعات الساحلية.">
+      <p class="para-text">Freshwater and coastal systems are also impacted by urban activity. Runoff from impervious surfaces transports sediments, nutrients, microplastics and chemicals into waterways. Changing precipitation patterns, intensified storm events and sea-level rise alter flood frequency and water quality. Earth observation provides flood mapping, surface-water extent time series and turbidity indices that inform drainage design, nature-based solutions (like wetlands restoration) and coastal defense planning.</p>
+    </div>
 
-    <p data-en="Urban water resources and coastal systems are susceptible to pollution and altered hydrology. Runoff from impervious surfaces transports sediments, nutrients and microplastics into waterways. Shifts in precipitation regimes, more intense storms and sea-level rise modify flood frequency and water quality. Satellite imagery and radar time-series provide flood mapping, surface-water extents and turbidity indices that inform drainage design, nature-based solutions and coastal defenses."
-       data-ar="تتأثر موارد المياه الحضرية والنظم الساحلية بالتلوث وتغير الهيدرولجيا. ينقل الجريان الناجم عن الأسطح غير المنفذة الرواسب والمغذيات والميكروبلاستيك إلى المسطحات المائية. تغير أنماط الهطول، ازدياد العواصف وارتفاع مستوى سطح البحر يغيران تكرار الفيضانات وجودة المياه. توفر صور الأقمار الصناعية وسلاسل رادار زمنية خرائط فيضانات، امتدادات المياه السطحية ومؤشرات العكارة التي تُسهم في تصميم شبكات الصرف والحلول الطبيعية والدفاعات الساحلية.">
-    </p>
+    <div class="paragraph" data-en="Resource flows—energy, building materials, food and water—determine the sustainability footprint of an urban region. Circular economy practices reduce extraction and landfill pressure: improving recycling, localized material loops, and demand-side energy efficiency lower emissions and waste. High-resolution satellite imagery combined with ground data enables identification of rooftop solar potential, building efficiency metrics, and urban vegetation cover that are essential for targeting retrofits and local renewable deployments."
+                 data_ar="تحدد تدفقات الموارد — الطاقة ومواد البناء والغذاء والماء — البصمة الاستدامية لمنطقة حضرية. تقلل ممارسات الاقتصاد الدائري من الاستخراج والضغط على المطامر: فتحسين الفرز وإعادة التدوير، والحلقات المادية المحلية، وكفاءة الطاقة على جانب الطلب تخفض الانبعاثات والنفايات. تُمكّن صور الأقمار الصناعية عالية الدقة مقترنة ببيانات أرضية من تحديد إمكانيات الطاقة الشمسية على الأسطح، ومقاييس كفاءة المباني، والغطاء النباتي الحضري التي تعد أساسية لاستهداف تحديثات المباني ونشر الطاقة المتجددة المحلية.">
+      <p class="para-text">Resource flows—energy, building materials, food and water—determine the sustainability footprint of an urban region. Circular economy practices reduce extraction and landfill pressure: improving recycling, localized material loops, and demand-side energy efficiency lower emissions and waste. High-resolution satellite imagery combined with ground data enables identification of rooftop solar potential, building efficiency metrics, and urban vegetation cover that are essential for targeting retrofits and local renewable deployments.</p>
+    </div>
 
-    <p data-en="Resource flows — energy, building materials, food and water — define the sustainability footprint of an urban region. Circular economy measures reduce extraction and landfill pressure: improved sorting, localized material loops and demand-side energy efficiency decrease emissions and waste. High-resolution imagery combined with cadastral and socio-economic layers enables identification of rooftop solar potential, building efficiency opportunities and urban vegetation gaps that guide targeted retrofits and local renewable deployment."
-       data_ar="تحدد تدفقات الموارد — الطاقة ومواد البناء والغذاء والماء — البصمة الاستدامية لمنطقة حضرية. تقلل ممارسات الاقتصاد الدائري من معدلات الاستخراج والضغط على المدافن: تحسين الفرز، الحلقات المادية المحلية وكفاءة الطاقة جانب الطلب تقلل الانبعاثات والنفايات. تُمكن الصور عالية الدقة مقترنة بطبقات سجلات الملكية والبيانات الاجتماعية-الاقتصادية من تحديد إمكانات الطاقة الشمسية على الأسطح، فرص كفاءة المباني وفجوات الغطاء النباتي لتوجيه التحديثات المستهدفة ونشر الطاقات المتجددة المحلية.">
-    </p>
+    <img class="inline" src="https://images.unsplash.com/photo-1509395176047-4a66953fd231?auto=format&fit=crop&w=1400&q=80" alt="Renewable energy on buildings">
 
-    <img src="https://images.unsplash.com/photo-1509395176047-4a66953fd231?auto=format&fit=crop&w=1400&q=80" alt="Renewable energy on buildings" data-en="Rooftop solar and efficiency" data-ar="الطاقة الشمسية على الأسطح وكفاءة الطاقة">
+    <div class="paragraph" data-en="Climate change represents a shifting baseline: long-term trends in temperature, precipitation and sea-level increase the exposure of cities to hazards. Integrating projected climate scenarios with observations allows planners to move from reactive to anticipatory adaptation. For example, remote sensing of urban heat islands supports targeted tree planting and reflective-surface programs where they will reduce heat exposure for vulnerable populations."
+                 data_ar="يمثل تغير المناخ خط أساس متغيرًا: فالاتجاهات طويلة المدى في درجات الحرارة والهطول ومستوى سطح البحر تزيد تعرض المدن للمخاطر. يسمح دمج سيناريوهات مناخية متوقعة مع الملاحظات للمخططين بالانتقال من الاستجابة إلى التكيف التنبؤي. على سبيل المثال، يدعم الاستشعار عن بعد للجزر الحرارية الحضرية زرع الأشجار المستهدف وبرامج الأسطح العاكسة حيث تقلل التعرض للحرارة على الفئات الضعيفة.">
+      <p class="para-text">Climate change represents a shifting baseline: long-term trends in temperature, precipitation and sea-level increase the exposure of cities to hazards. Integrating projected climate scenarios with observations allows planners to move from reactive to anticipatory adaptation. For example, remote sensing of urban heat islands supports targeted tree planting and reflective-surface programs where they will reduce heat exposure for vulnerable populations.</p>
+    </div>
 
-    <p data-en="Climate change shifts baseline conditions: long-term trends in temperature, precipitation and sea level increase urban exposure to heatwaves, floods and droughts. Combining observation time-series with climate projections helps planners move from reactive coping to anticipatory adaptation. For example, mapping urban heat islands supports targeted tree planting and surface-albedo interventions to reduce heat exposure for vulnerable populations."
-       data_ar="يغير تغير المناخ الظروف الأساسية: تؤدي الاتجاهات طويلة الأمد في درجات الحرارة والهطول ومستوى سطح البحر إلى زيادة تعرض المدن لموجات الحر والفيضانات والجفاف. يساعد دمج سلاسل الملاحظات مع توقعات المناخ المخططين على الانتقال من الاستجابة الارتجالية إلى التكيف التنبؤي. فعلى سبيل المثال، يدعم رسم خرائط الجزر الحرارية الحضرية زرع الأشجار المستهدف وتدخلات السطوح العاكسة لتقليل تعرض الفئات الضعيفة للحرارة.">
-    </p>
+    <div class="paragraph" data-en="Data assimilation, machine learning and open-data platforms are enabling near-real-time monitoring and risk scoring at neighborhood scales. NASA and other space agencies provide freely accessible products — land-cover classification, thermal bands, vegetation indices, radar for surface displacement, and atmospheric composition datasets — that, when combined with local sensors and socio-economic layers, empower evidence-based decision making."
+                 data_ar="يُمكّن إدماج البيانات وتعلم الآلة ومنصات البيانات المفتوحة من المراقبة القريبة من الزمن الحقيقي وتسجيل المخاطر على مستوى الأحياء. توفر ناسا ووكالات الفضاء الأخرى منتجات متاحة مجانًا — تصنيف غطاء الأرض، نطاقات حرارية، مؤشرات نباتية، رادار لقياسات تشوه السطح، ومجموعات بيانات تركيبة الغلاف الجوي — والتي عند دمجها مع أجهزة استشعار محلية وطبقات اجتماعية-اقتصادية تمكّن اتخاذ قرارات قائمة على الأدلة.">
+      <p class="para-text">Data assimilation, machine learning and open-data platforms are enabling near-real-time monitoring and risk scoring at neighborhood scales. NASA and other space agencies provide freely accessible products — land-cover classification, thermal bands, vegetation indices, radar for surface displacement, and atmospheric composition datasets — that, when combined with local sensors and socio-economic layers, empower evidence-based decision making.</p>
+    </div>
 
-    <p data-en="Operationalizing Earth observation requires three linked steps: measurement, synthesis and action. Measurement delivers consistent indicators; synthesis integrates spatial layers into dashboards and risk maps; action translates insights into zoning, green infrastructure investments and inclusive policies that prioritize marginalized neighborhoods. Transparent metrics and community participation are essential to ensure interventions reduce inequities rather than reinforce them."
-       data_ar="يتطلب تشغيل رصد الأرض ثلاث خطوات مترابطة: القياس، التجميع والعمل. يوفر القياس مؤشرات متسقة؛ يدمج التجميع الطبقات المكانية في لوحات تحكم وخرائط مخاطرة؛ تُترجم الإجراءات الرؤى إلى تقسيمات استخدام الأرض، استثمارات في البنية الخضراء وسياسات شاملة تُعطي الأولوية للأحياء المهمشة. المقاييس الشفافة ومشاركة المجتمع ضروريان لضمان أن تقلل التدخلات من عدم المساواة بدلًا من ترسيخها.">
-    </p>
+    <img class="inline" src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80" alt="Satellite data visualization">
 
-    <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80" alt="Satellite data visualization" data-en="Satellite data visualization" data-ar="تصوير بيانات الأقمار الصناعية">
+    <div class="paragraph" data-en="Operationalizing this information involves three linked steps: measurement, synthesis, and action. First, consistent monitoring identifies trends and anomalies. Second, synthesis integrates multiple indicators into dashboards and spatial risk maps. Third, action translates insights into zoning, green infrastructure investments, emergency planning, and inclusive policies that prioritize marginalized neighborhoods. Transparent metrics and community engagement are essential to ensure interventions reduce inequities rather than reinforce them."
+                 data_ar="يتضمن تشغيل هذه المعلومات ثلاث خطوات مترابطة: القياس، والتجميع، والعمل. أولًا: يحدد الرصد المتسق الاتجاهات والشذوذ. ثانيًا: يدمج التجميع مؤشرات متعددة في لوحات قيادة وخرائط مخاطرة مكانية. ثالثًا: يترجم العمل الرؤى إلى تقسيمات استخدام الأرض، واستثمارات البنية الخضراء، والتخطيط للطوارئ، وسياسات شاملة تُعطي الأولوية للأحياء المُهمّشة. المقاييس الشفافة ومشاركة المجتمع ضروريان لضمان أن تقلل التدخلات من عدم المساواة بدلاً من تكريسها.">
+      <p class="para-text">Operationalizing this information involves three linked steps: measurement, synthesis, and action. First, consistent monitoring identifies trends and anomalies. Second, synthesis integrates multiple indicators into dashboards and spatial risk maps. Third, action translates insights into zoning, green infrastructure investments, emergency planning, and inclusive policies that prioritize marginalized neighborhoods. Transparent metrics and community engagement are essential to ensure interventions reduce inequities rather than reinforce them.</p>
+    </div>
 
-    <p data-en="In summary, satellite Earth observation extends the spatial and temporal reach of urban monitoring and provides objective inputs for evidence-based planning. While satellites do not replace in-situ measurements or governance, their broad view helps identify priority areas for intervention, quantify benefits and track progress toward resilient, equitable and low-carbon urban futures."
-       data_ar="باختصار، يوسع رصد الأرض عبر الأقمار الصناعية مدى المراقبة مكانيًا وزمنيًا ويوفر مدخلات موضوعية للتخطيط القائم على الأدلة. بينما لا تحل الأقمار الصناعية محل القياسات الميدانية أو الحوكمة، تساعد رؤيتها الواسعة في تحديد المناطق ذات الأولوية للتدخل، وقياس الفوائد وتتبع التقدم نحو مستقبل حضري مرن وعادل ومنخفض الكربون.">
-    </p>
+    <div class="paragraph" data-en="In conclusion, the integration of Earth observation with local knowledge and policy frameworks provides a path toward resilient urban futures. While satellites do not replace field measurements or governance, they extend the spatial and temporal reach of monitoring systems. Planners who harness these data can more effectively target interventions that protect habitats, reduce pollution, conserve resources, and enhance social well-being under a changing climate."
+                 data_ar="في الختام، يوفر دمج رصد الأرض مع المعرفة المحلية والأطر السياساتية مسارًا نحو مستقبل حضري مرن. بينما لا تحل الأقمار الصناعية محل القياسات الميدانية أو الحوكمة، فإنها توسع مدى المراقبة مكانيًا وزمنيًا. يمكن للمخططين الذين يستغلون هذه البيانات أن يوجهوا التدخلات بشكل أكثر فعالية لحماية الموائل، والحد من التلوث، والحفاظ على الموارد، وتعزيز الرفاهية الاجتماعية في ظل مناخ متغير.">
+      <p class="para-text">In conclusion, the integration of Earth observation with local knowledge and policy frameworks provides a path toward resilient urban futures. While satellites do not replace field measurements or governance, they extend the spatial and temporal reach of monitoring systems. Planners who harness these data can more effectively target interventions that protect habitats, reduce pollution, conserve resources, and enhance social well-being under a changing climate.</p>
+    </div>
 
   </article>
 </main>
 
 <footer>
-  <div id="footerText" data-en="Built for quick sharing — save as index.html and deploy on GitHub Pages." data-ar="مُعد للمشاركة السريعة — احفظه باسم index.html وانشره على GitHub Pages.">
-    Built for quick sharing — save as index.html and deploy on GitHub Pages.
-  </div>
+  <div id="footerText" data-en="Built for quick sharing — save as index.html and deploy on GitHub Pages." data-ar="مُعد للمشاركة السريعة — احفظه باسم index.html وانشره على GitHub Pages.">Built for quick sharing — save as index.html and deploy on GitHub Pages.</div>
 </footer>
 
 <script>
-  // Stable language toggle: only switch elements that have BOTH data-en AND data-ar
+  // --- Language toggle
   const langBtn = document.getElementById('langBtn');
-  const themeBtn = document.getElementById('themeBtn');
-
-  // Load preferences if available
-  const savedLang = localStorage.getItem('siteLang') || 'en';
-  const savedTheme = localStorage.getItem('siteTheme') || 'dark';
-
-  function setLanguage(l) {
-    const nodes = document.querySelectorAll('[data-en][data-ar]');
-    nodes.forEach(n => {
-      // use dataset to avoid attributes with hyphen issues
-      const en = n.dataset.en;
-      const ar = n.dataset.ar;
-      if (l === 'en') n.textContent = en;
-      else n.textContent = ar || en;
+  let lang = 'en';
+  function setLanguage(l){
+    lang = l;
+    // All elements that have data-en need to switch
+    document.querySelectorAll('[data-en]').forEach(el=>{
+      const en = el.getAttribute('data-en');
+      const ar = el.getAttribute('data-ar') || el.getAttribute('data_ar') || el.getAttribute('data-ar') || el.getAttribute('data_ar');
+      if(!en) return;
+      if(lang==='en'){ el.textContent = en; document.documentElement.lang = 'en'; document.documentElement.dir='ltr'; document.documentElement.style.fontFamily = "system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', Arial, sans-serif"; }
+      else { el.textContent = (ar || en); document.documentElement.lang = 'ar'; document.documentElement.dir = 'rtl'; document.documentElement.style.fontFamily = "'Noto Naskh Arabic', 'Noto Sans Arabic', Tahoma, system-ui, sans-serif"; }
     });
-    document.documentElement.lang = (l === 'en' ? 'en' : 'ar');
-    document.documentElement.dir = (l === 'en' ? 'ltr' : 'rtl');
-    // adjust body font-family slightly for Arabic display (will fallback if font missing)
-    if (l === 'ar') {
-      document.body.style.fontFamily = "'Noto Naskh Arabic', 'Noto Sans Arabic', Tahoma, system-ui, sans-serif";
-      langBtn.textContent = '🌍 English';
-    } else {
-      document.body.style.fontFamily = "system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans',Arial,sans-serif";
-      langBtn.textContent = '🌍 Arabic';
-    }
-    localStorage.setItem('siteLang', l);
+    // Update button label
+    langBtn.textContent = (lang==='en'? '🌍 Arabic' : '🌍 English');
   }
+  langBtn.addEventListener('click', ()=> setLanguage(lang==='en' ? 'ar' : 'en') );
+  // Set default text (use English)
+  setLanguage('en');
 
-  function setTheme(mode) {
-    if (mode === 'light') document.body.classList.add('light');
-    else document.body.classList.remove('light');
-    localStorage.setItem('siteTheme', mode);
-  }
-
-  // toggleers
-  langBtn.addEventListener('click', () => {
-    const current = (localStorage.getItem('siteLang') || savedLang) === 'en' ? 'en' : 'ar';
-    setLanguage(current === 'en' ? 'ar' : 'en');
-  });
-  themeBtn.addEventListener('click', () => {
-    const current = document.body.classList.contains('light') ? 'light' : 'dark';
-    setTheme(current === 'light' ? 'dark' : 'light');
+  // --- Theme toggle
+  const themeBtn = document.getElementById('themeBtn');
+  themeBtn.addEventListener('click', ()=>{
+    document.body.classList.toggle('light');
+    // small a11y: update stored preference?
   });
 
-  // keyboard shortcuts helpful: Ctrl/Cmd+L for language, Ctrl/Cmd+T for theme
-  document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
-      e.preventDefault(); langBtn.click();
+  // --- Scroll animation: fade-in / slide-up using IntersectionObserver
+  const observerOptions = { root:null, rootMargin:'0px', threshold: 0.15 };
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const el = entry.target;
+      if(entry.isIntersecting){
+        el.classList.add('visible');
+      } else {
+        // remove visible so it fades out when leaving view (gives effect of top fading)
+        el.classList.remove('visible');
+      }
+      // NOTE: this behavior makes the outgoing text fade while the incoming fades-in
+    });
+  }, observerOptions);
+
+  // Observe paragraphs and inline images
+  document.querySelectorAll('.paragraph, img.inline').forEach(n => observer.observe(n));
+
+  // Accessibility: allow keyboard toggles
+  document.addEventListener('keydown', e=>{
+    if((e.ctrlKey || e.metaKey) && e.key === 'l') { // Ctrl/Cmd + L -> toggle language
+      e.preventDefault(); setLanguage(lang==='en'?'ar':'en');
     }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 't') {
-      e.preventDefault(); themeBtn.click();
+    if((e.ctrlKey || e.metaKey) && e.key === 't') { // Ctrl/Cmd + T -> toggle theme
+      e.preventDefault(); document.body.classList.toggle('light');
     }
   });
 
-  // initialize with saved preferences (stable toggling)
-  setTheme(savedTheme === 'light' ? 'light' : 'dark');
-  setLanguage(savedLang === 'ar' ? 'ar' : 'en');
 </script>
 </body>
 </html>
