@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Urban Environment — Habitats • Pollution • Waste & Resources</title>
+  <meta name="description" content="Mobile-friendly page about habitats, pollution, and waste & resources with images and explanations." />
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #171a21;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #22d3ee;
+      --ring: #334155;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Tahoma, Arial, sans-serif;
+      line-height: 1.7; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { width: min(100%, 960px); margin: 0 auto; padding: 0 16px; }
+    header {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: saturate(1.2) blur(8px);
+      background: color-mix(in oklab, var(--bg) 85%, black);
+      border-bottom: 1px solid var(--ring);
+    }
+    .nav { display: flex; align-items: center; gap: 8px; padding: 12px 0; }
+    .brand { font-weight: 800; letter-spacing: .3px; font-size: 1.05rem; }
+    .spacer { flex: 1 1 auto; }
+    .nav a.btn {
+      display: inline-block; padding: 8px 12px; border: 1px solid var(--ring);
+      border-radius: 999px; background: var(--card);
+    }
+    .hero { padding: 32px 0 12px; }
+    .hero h1 { margin: 0 0 10px; font-size: clamp(1.3rem, 4vw, 2rem); }
+    .hero p.lead { margin: 0; color: var(--muted); font-size: 0.98rem; }
+    section { padding: 18px 0 8px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 680px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .card {
+      background: var(--card); border: 1px solid var(--ring);
+      border-radius: 16px; overflow: clip; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .card img { width: 100%; height: 220px; object-fit: cover; display: block; }
+    .card .body { padding: 14px; }
+    .card h3 { margin: 2px 0 8px; font-size: 1.1rem; }
+    .card p { margin: 0; color: #cbd5e1; }
+    .section-title { display:flex; align-items:center; gap:10px; margin: 8px 0 6px; }
+    .badge { font-size: .8rem; color: var(--bg); background: var(--accent); border-radius: 999px; padding: 2px 8px; font-weight: 700; }
+    footer { border-top: 1px solid var(--ring); margin-top: 24px; padding: 18px 0 30px; color: var(--muted); font-size: .95rem; }
+    .muted { color: var(--muted); }
+    .top-btn { position: fixed; inset-inline-start: 12px; inset-block-end: 16px; z-index: 30; }
+    .top-btn button { border-radius: 999px; border: 1px solid var(--ring); background: var(--card); color: var(--text); padding: 10px 14px; }
+    .light {
+      --bg: #fafafa; --card: #ffffff; --text: #0b1220; --muted: #4b5563; --accent: #0ea5e9; --ring: #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <div class="brand">Urban Environment</div>
+      <div class="spacer"></div>
+      <a href="#habitat" class="btn">Habitats</a>
+      <a href="#pollution" class="btn">Pollution</a>
+      <a href="#waste" class="btn">Waste & Resources</a>
+      <button id="mode" class="btn" title="Light/Dark Mode">☀︎/🌙</button>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="hero">
+      <h1>Well-being of Society and the Environment in Cities</h1>
+      <p class="lead">Climate change adds new complexities that must be considered to maintain the well-being of society and the environment in cities. Natural resources, ecosystems, and existing infrastructure must be monitored to ensure a high quality of life. The challenge is to show how city planners can use NASA’s Earth observation data to develop smart strategies for urban growth that ensure the well-being of both people and the environment.</p>
+    </section>
+  </main>
+  <script>
+    const btn = document.getElementById('mode');
+    btn.addEventListener('click', () => {
+      document.body.classList.toggle('light');
+      btn.setAttribute('aria-pressed', document.body.classList.contains('light'));
+    });
+  </script>
+</body>
+</html>
