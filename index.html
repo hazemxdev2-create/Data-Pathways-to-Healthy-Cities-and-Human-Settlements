@@ -1,85 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Urban Environment</title>
-<style>
-:root {
---bg: #0f1115;
---card: #171a21;
---text: #f1f5f9;
---muted: #94a3b8;
---accent: #22d3ee;
---ring: #334155;
-}
-body.light {
---bg: #fafafa;
---card: #ffffff;
---text: #0b1220;
---muted: #4b5563;
---accent: #0ea5e9;
---ring: #e5e7eb;
-}
-* { box-sizing: border-box; margin:0; padding:0; }
-body {
-background: var(--bg);
-color: var(--text);
-font-family: system-ui, sans-serif;
-line-height: 1.7;
-}
-header {
-position: sticky; top:0;
-display:flex; align-items:center; justify-content:space-between;
-padding: 10px 20px;
-background: var(--card);
-border-bottom: 1px solid var(--ring);
-z-index: 50;
-}
-header h1 { font-size: 1.2rem; }
-header button {
-background: var(--accent); border:none; color:white;
-padding:6px 12px; border-radius:6px; cursor:pointer;
-margin-left: 8px;
-}
-section {
-max-width: 900px; margin: 0 auto; padding: 40px 20px;
-}
-section h2 { margin-bottom: 10px; }
-section p { margin-bottom: 15px; color: var(--muted); }
-.card {
-background: var(--card); border:1px solid var(--ring);
-border-radius: 12px; overflow:hidden;
-margin-bottom: 20px; box-shadow: 0 5px 20px rgba(0,0,0,.2);
-}
-.card img { width:100%; height:200px; object-fit:cover; }
-.card .body { padding:15px; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Urban Environment</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #171a21;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #22d3ee;
+      --ring: #334155;
+    }
+    body.light {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --text: #0b1220;
+      --muted: #4b5563;
+      --accent: #0ea5e9;
+      --ring: #e5e7eb;
+    }
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      line-height: 1.7;
+    }
+    header {
+      position: sticky; top:0;
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 10px 20px;
+      background: var(--card);
+      border-bottom: 1px solid var(--ring);
+      z-index: 50;
+    }
+    header h1 { font-size: 1.2rem; }
+    header button {
+      background: var(--accent); border:none; color:white;
+      padding:6px 12px; border-radius:6px; cursor:pointer;
+      margin-left: 8px;
+    }
+    section {
+      max-width: 900px; margin: 0 auto; padding: 40px 20px;
+    }
+    section img {
+      width:100%; height:300px; object-fit:cover;
+      border-radius:12px; margin:20px 0;
+    }
+    section h2 { margin: 20px 0 10px; font-size:1.4rem; }
+    section p { margin-bottom: 15px; color: var(--muted); }
+  </style>
 </head>
 <body>
-<header>
-<h1 id="title">Urban Environment</h1>
-<div>
-<button onclick="toggleTheme()">🌗 Mode</button>
-<button onclick="toggleLang()">🌍 Lang</button>
-</div>
-</header>
+  <header>
+    <h1 id="title">Urban Environment</h1>
+    <div>
+      <button onclick="toggleTheme()">🌗 Mode</button>
+      <button onclick="toggleLang()">🌍 Lang</button>
+    </div>
+  </header>
 
+  <section id="content">
+    <h2 data-en="Habitats" data-ar="الموائل">Habitats</h2>
+    <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1000&q=80" alt="Habitats">
+    <p data-en="Habitats are essential for biodiversity and human well-being." 
+       data-ar="الموائل ضرورية للتنوع البيولوجي ورفاهية الإنسان.">
+       Habitats are essential for biodiversity and human well-being.
+    </p>
 
-<section id="content">
-<div class="card">
-<img src="https://source.unsplash.com/900x400/?forest" alt="Habitats">
-<div class="body">
-<h2 data-en="Habitats" data-ar="الموائل">Habitats</h2>
-<p data-en="Habitats are essential for biodiversity and human well-being." data-ar="الموائل ضرورية للتنوع البيولوجي ورفاهية الإنسان.">Habitats are essential for biodiversity and human well-being.</p>
-</div>
-</div>
-<div class="card">
-<img src="https://source.unsplash.com/900x400/?pollution" alt="Pollution">
-<div class="body">
-<h2 data-en="Pollution" data-ar="تلوث">Pollution</h2>
-<p data-en="Pollution affects air, water, and soil quality in cities." data-ar="التلوث يؤثر على جودة الهواء والماء والتربة في المدن.">Pollution affects air, water, and soil quality in cities.</p>
-</div>
-</div>
-<div class="card">
+    <h2 data-en="Pollution" data-ar="تلوث">Pollution</h2>
+    <img src="https://images.unsplash.com/photo-1606112219348-204d7d8b94ee?auto=format&fit=crop&w=1000&q=80" alt="Pollution">
+    <p data-en="Pollution affects air, water, and soil quality in cities." 
+       data-ar="التلوث يؤثر على جودة الهواء والماء والتربة في المدن.">
+       Pollution affects air, water, and soil quality in cities.
+    </p>
+
+    <h2 data-en="Waste & Resources" data-ar="النفايات والموارد">Waste & Resources</h2>
+    <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80" alt="Waste">
+    <p data-en="Efficient use of resources reduces waste and improves sustainability." 
+       data-ar="الاستخدام الفعال للموارد يقلل من النفايات ويحسن الاستدامة.">
+       Efficient use of resources reduces waste and improves sustainability.
+    </p>
+
+    <h2 data-en="Climate Change" data-ar="تغير المناخ">Climate Change</h2>
+    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=80" alt="Climate Change">
+    <p data-en="Climate change adds complexity to city planning and resilience." 
+       data-ar="يضيف تغير المناخ تعقيدات لتخطيط المدن والقدرة على الصمود.">
+       Climate change adds complexity to city planning and resilience.
+    </p>
+
+    <h2 data-en="Sustainable Cities" data-ar="مدن مستدامة">Sustainable Cities</h2>
+    <img src="https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=1000&q=80" alt="Cities">
+    <p data-en="Smart urban strategies ensure well-being for people and environment." 
+       data-ar="استراتيجيات المدن الذكية تضمن رفاهية الناس والبيئة.">
+       Smart urban strategies ensure well-being for people and environment.
+    </p>
+  </section>
+
+  <script>
+    let lang = 'en';
+    function toggleTheme(){ document.body.classList.toggle('light'); }
+    function toggleLang(){
+      lang = lang === 'en' ? 'ar' : 'en';
+      document.querySelectorAll('[data-en]').forEach(el => {
+        el.textContent = el.getAttribute(`data-${lang}`);
+      });
+    }
+  </script>
+</body>
 </html>
