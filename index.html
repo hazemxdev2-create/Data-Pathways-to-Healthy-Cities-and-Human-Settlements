@@ -1,189 +1,375 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Urban Environment — Scientific Overview</title>
-  <style>
-    :root {
-      --bg: #f9f9f9;
-      --text: #222;
-      --card: #fff;
-    }
-    [data-theme="dark"] {
-      --bg: #181818;
-      --text: #e0e0e0;
-      --card: #242424;
-    }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 20px;
-      background: var(--card);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      border-bottom: 1px solid rgba(128,128,128,0.3);
-    }
-    .brand {
-      font-weight: bold;
-    }
-    .buttons button {
-      margin-left: 8px;
-      padding: 6px 12px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    main {
-      max-width: 900px;
-      margin: auto;
-      padding: 20px;
-    }
-    article {
-      background: var(--card);
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-    }
-    img.inline {
-      width: 100%;
-      max-height: 360px;
-      object-fit: cover;
-      border-radius: 12px;
-      margin: 20px 0;
-    }
-    h2 {
-      margin-top: 0;
-    }
-    footer {
-      text-align: center;
-      font-size: 0.9rem;
-      padding: 20px;
-      color: gray;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Impactor-2025 — Interactive Challenge & Simulation</title>
+<meta name="description" content="Impactor-2025 challenge: integrate NASA & USGS data, visualize and simulate asteroid impact scenarios. Interactive demo included." />
+<style>
+  :root{
+    --bg: #0f1115; --card: #171a21; --text: #e8eef6; --muted: #9fb0c8; --accent: #22d3ee;
+    --glass: rgba(255,255,255,0.03);
+  }
+  body.light{
+    --bg: #fbfbfe; --card: #ffffff; --text: #091021; --muted: #475569; --accent: #0ea5e9; --glass: rgba(0,0,0,0.04);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; line-height:1.6; transition: background .25s, color .25s;
+  }
 
-    /* Animation */
-    .fade-in {
-      opacity: 0;
-      transform: translateY(30px);
-      transition: opacity 1s ease, transform 1s ease;
-    }
-    .fade-in.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  </style>
+  header{
+    position:sticky; top:0; z-index:40; display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px; backdrop-filter: blur(6px); background: linear-gradient(180deg,var(--glass),transparent);
+    border-bottom:1px solid rgba(255,255,255,0.03);
+  }
+  .brand{font-weight:700; font-size:1rem}
+  .controls{display:flex; gap:8px; align-items:center}
+  .btn{background:var(--card); color:var(--text); border:0; padding:8px 10px; border-radius:10px; font-weight:600; cursor:pointer}
+  .btn.small{padding:6px 8px; font-size:.95rem}
+  main.wrapper{max-width:940px; margin:14px auto; padding:12px;}
+
+  /* article blocks -> animated on scroll */
+  .block{background:var(--card); border-radius:14px; padding:16px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.02); box-shadow:0 10px 30px rgba(0,0,0,0.25)}
+  h1,h2{margin:0 0 8px}
+  p.lead{color:var(--muted); margin:0 0 12px}
+  img.hero{width:100%; height:260px; object-fit:cover; border-radius:10px; margin:10px 0}
+  .meta{font-size:.95rem;color:var(--muted);margin-bottom:10px}
+  .section{margin-bottom:12px}
+
+  /* animation classes */
+  .fade-slide{opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease}
+  .fade-slide.visible{opacity:1; transform:none}
+
+  /* simulation area */
+  .sim{display:grid; grid-template-columns:1fr; gap:12px}
+  @media(min-width:820px){ .sim{grid-template-columns: 360px 1fr} }
+
+  .panel{padding:12px; border-radius:10px; background:rgba(0,0,0,0.02); border:1px solid rgba(0,0,0,0.04)}
+  label{display:block; font-weight:600; margin:8px 0 6px}
+  input[type=range]{width:100%}
+  input[type=number], select{width:100%; padding:8px; border-radius:8px; border:1px solid rgba(0,0,0,0.08); margin-top:6px}
+  .stat{font-weight:700; margin-top:8px}
+  canvas#vis{width:100%; height:400px; border-radius:10px; background:linear-gradient(180deg, rgba(0,0,0,0.04), transparent)}
+
+  footer{color:var(--muted); text-align:center; padding:14px 10px; font-size:.95rem}
+
+  .hint{font-size:.88rem;color:var(--muted); margin-top:8px}
+</style>
 </head>
-<body data-theme="dark" dir="ltr">
-  <header>
-    <div class="brand">Urban Environment — Scientific Overview</div>
-    <div class="buttons">
-      <button onclick="toggleTheme()">Theme</button>
-      <button onclick="toggleLang()">عربي</button>
+<body>
+
+<header>
+  <div class="brand">Impactor-2025 — Public Simulation & Visualization Challenge</div>
+  <div class="controls">
+    <button class="btn small" id="themeBtn">🌗 Theme</button>
+    <button class="btn small" id="resetBtn">↺ Reset</button>
+  </div>
+</header>
+
+<main class="wrapper">
+
+  <!-- INTRO -->
+  <section class="block fade-slide" id="intro">
+    <h1>Challenge overview</h1>
+    <p class="meta">A newly identified near-Earth asteroid, “Impactor-2025,” may pose a potential threat. This page demonstrates how NASA and USGS datasets can be integrated into a public-facing tool to model impact scenarios, visualize consequences, and evaluate mitigation strategies.</p>
+
+    <p class="lead">Your mission: create engaging visualizations and simple simulations using real data (asteroid catalogs, terrain, population), communicate uncertainty to non-experts and decision-makers, and let users explore "what-if" mitigation strategies. Below we explain the scientific basis, data sources, modeling approximations, and include a lightweight interactive simulator you can use as a prototype or teaching tool.</p>
+
+    <img class="hero fade-slide" src="https://images.unsplash.com/photo-1581092795368-2f9d8dbd6a73?auto=format&fit=crop&w=1400&q=80" alt="Near-Earth space view">
+  </section>
+
+  <!-- DATA SOURCES -->
+  <section class="block fade-slide" id="data">
+    <h2>Data sources & why they matter</h2>
+    <p class="section">
+      Two public data families are crucial:
+      <strong>NASA</strong> provides asteroid catalogs and orbital elements (e.g., JPL Small-Body Database, CNEOS impact risk pages). These datasets give orbital parameters, size and albedo estimates and probability distributions for future trajectory uncertainty. The <strong>USGS</strong> supplies terrestrial data (topography, land cover, population density proxies, and coastal elevation data) and hydrology layers useful to model secondary hazards (flooding, storm surge coupling).
+    </p>
+
+    <p class="section">
+      Integrating them lets a visualization tool do three things: (1) show the orbit and the impact corridor probability on an interactive map, (2) compute initial physical effects (energy, crater size, blast and thermal radii), and (3) combine these with population and infrastructure maps to estimate exposure and to prioritize mitigation actions (evacuation, hardening, sea-barriers).
+    </p>
+
+    <img class="hero fade-slide" src="https://images.unsplash.com/photo-1549576490-b0b4831ef60a?auto=format&fit=crop&w=1400&q=80" alt="Datasets and maps">
+  </section>
+
+  <!-- SCIENTIFIC EXPLANATION (long text) -->
+  <section class="block fade-slide" id="science">
+    <h2>Scientific modeling and approximations</h2>
+    <p class="section">
+      Modeling an asteroid strike requires multiple scales: orbital mechanics (long-range prediction of impact probability), atmospheric entry physics (fragmentation, airburst), and ground-coupled effects (cratering, blast, thermal radiation, seismic shaking, and ejecta). A rigorous operational model uses trajectory propagation with Monte Carlo ensembles to produce a probabilistic impact corridor, then couples entry models (which estimate whether the body will airburst or reach the surface) to empirical scaling laws that estimate crater diameter and blast wave intensity.
+    </p>
+
+    <p class="section">
+      For a public tool we adopt transparent, conservative approximations:
+      <ul>
+        <li><strong>Mass</strong> estimated from diameter and assumed density (typical asteroid densities 2000–3500 kg/m³).</li>
+        <li><strong>Kinetic energy</strong> computed as E = ½ m v² (Joules), converted to megatons TNT (1 Mt ≈ 4.184×10¹⁵ J).</li>
+        <li><strong>Crater scale</strong> and <strong>blast radii</strong> derived from empirically calibrated power-law fits (widely used approximations in public outreach tools). These are simplified and always shown with uncertainty ranges.</li>
+      </ul>
+    </p>
+
+    <p class="section">
+      The important communication principle: show both central estimates and uncertainty bands; let users toggle conservative vs optimistic assumptions; and always provide links to the primary datasets (JPL, NASA, USGS) for transparency.
+    </p>
+  </section>
+
+  <!-- SIMULATION UI -->
+  <section class="block fade-slide" id="simulator">
+    <h2>Interactive prototype: impact simulator (client-side)</h2>
+    <p class="section">Adjust the asteroid parameters below, press <strong>Simulate impact</strong>, and observe summary metrics and a visualization. This prototype uses simple physical approximations intended for demonstration, education and planning discussion — not for operational emergency decision making.</p>
+
+    <div class="sim">
+      <div class="panel" id="controls">
+        <label>Diameter (m)</label>
+        <input id="diam" type="range" min="5" max="2000" value="120">
+        <input id="diamNum" type="number" min="5" max="2000" value="120">
+
+        <label>Velocity (km/s)</label>
+        <input id="vel" type="range" min="5" max="72" step="0.1" value="17">
+        <input id="velNum" type="number" min="5" max="72" step="0.1" value="17">
+
+        <label>Density (kg/m³)</label>
+        <input id="dens" type="number" min="1000" max="5500" value="3000">
+
+        <label>Impact angle (deg)</label>
+        <input id="angle" type="range" min="10" max="90" value="45">
+        <input id="angleNum" type="number" min="10" max="90" value="45">
+
+        <label>Impact target</label>
+        <select id="target">
+          <option value="land">Land</option>
+          <option value="sea">Sea</option>
+        </select>
+
+        <label>Population density (people / km²)</label>
+        <input id="pop" type="number" min="0" max="50000" value="1500">
+
+        <div style="margin-top:10px">
+          <button id="run" class="btn">Simulate impact</button>
+        </div>
+
+        <div class="hint">Tip: on mobile, use sliders then press Simulate. Values are approximate. Scroll to see visualization and interpretation below.</div>
+      </div>
+
+      <div class="panel" id="results">
+        <div id="summary" class="section">
+          <div class="stat">Energy: <span id="energy">—</span></div>
+          <div class="stat">Estimated crater diameter: <span id="crater">—</span></div>
+          <div class="stat">Airblast severe radius: <span id="blast">—</span></div>
+          <div class="stat">Thermal ignition radius: <span id="thermal">—</span></div>
+          <div class="stat">Estimated people exposed: <span id="exposed">—</span></div>
+        </div>
+
+        <canvas id="vis" width="720" height="440"></canvas>
+        <div class="hint">Visualization is schematic. Blast and thermal radii are drawn scaled for communication; circle areas estimate exposed population using population density input.</div>
+      </div>
     </div>
-  </header>
-  <main>
-    <article id="content">
-      <h2 class="fade-in">Using Earth Observation to Plan Resilient Cities</h2>
-      <p class="fade-in">
-        This article synthesizes scientific evidence on urban habitats, pollution, resource management and climate-driven risks.
-        It describes how planners can integrate satellite Earth observation data to create adaptive, equitable and low-impact urban growth strategies.
-      </p>
-      <img class="inline fade-in" src="https://images.unsplash.com/photo-1503387762-592deb58ef4e" alt="City from space"/>
+  </section>
 
-      <p class="fade-in">
-        Earth observation technologies provide critical insights into air quality, vegetation health, surface temperature, and hydrological cycles.
-        Urban expansion modifies these systems, often in ways that amplify vulnerability to floods, heatwaves, and pollution exposure.
-      </p>
+  <!-- MITIGATION & DECISION-MAKING -->
+  <section class="block fade-slide" id="mitigation">
+    <h2>Mitigation strategies & decision making</h2>
+    <p class="section">
+      Possible mitigation strategies vary by warning time: 
+      <ul>
+        <li><strong>Early detection with long lead time (years):</strong> orbital deflection (kinetic impactor, gravity tractor) to change orbit — requires international coordination and substantial resources.</li>
+        <li><strong>Shorter lead times (days-weeks):</strong> evacuation, asset hardening, and targeted emergency planning informed by simulated impact maps.</li>
+        <li><strong>Sea impacts:</strong> tsunami modeling coupled with local bathymetry (USGS) is essential to estimate coastal hazard zones.</li>
+      </ul>
+    </p>
 
-      <img class="inline fade-in" src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d" alt="Climate data visualization"/>
+    <p class="section">
+      Visualizations should therefore provide layered views: impact probability corridor, expected effects with uncertainty bands, population and infrastructure overlays, and recommended actions with estimated resource needs. Decision-makers benefit from summary dashboards and downloadable data for further analysis.
+    </p>
 
-      <p class="fade-in">
-        Operationalizing this information involves three linked steps: measurement, synthesis, and action. First, consistent monitoring identifies trends and anomalies. Second, synthesis integrates multiple indicators into dashboards and spatial risk maps. Third, action translates insights into zoning, green infrastructure investments, emergency planning, and inclusive policies that prioritize marginalized neighborhoods.
-      </p>
+    <img class="hero fade-slide" src="https://images.unsplash.com/photo-1529257414773-1960f6f4f3fb?auto=format&fit=crop&w=1400&q=80" alt="Emergency planning">
+  </section>
 
-      <img class="inline fade-in" src="https://images.unsplash.com/photo-1531297484001-80022131f5a1" alt="People working in urban data center"/>
+  <!-- CASE STUDIES & FUTURE -->
+  <section class="block fade-slide" id="future">
+    <h2>Case study & future directions</h2>
+    <p class="section">
+      A prototype could combine JPL orbit ensembles (to show probability maps) with USGS elevation and population layers to build a single-page interactive planning app. Future additions include real-time ingestion of newly refined orbit solutions, Monte Carlo ensembles for impact probability, and coupling to more advanced impact/hydrodynamic models for sea impacts. Coupling with local emergency response systems and community engagement portals will make visualizations actionable and trustworthy.
+    </p>
 
-      <p class="fade-in">
-        Transparent metrics and community engagement are essential to ensure interventions reduce inequities rather than reinforce them. In conclusion, the integration of Earth observation with local knowledge and policy frameworks provides a path toward resilient urban futures.
-      </p>
+    <p class="section">
+      Concluding: integrating NASA and USGS data into an interactive, transparent, and educational visualization/simulation tool helps both the public and decision-makers understand the risks posed by objects like Impactor-2025, explore realistic scenarios, and evaluate mitigation trade-offs.
+    </p>
+  </section>
 
-      <!-- Extended Information -->
-      <h2 class="fade-in">Historical Evolution of Cities</h2>
-      <p class="fade-in">
-        Cities have evolved from small trading hubs in Mesopotamia to sprawling megacities in the 21st century. Early cities were organized around rivers and fertile lands, offering trade opportunities and agriculture. During the industrial revolution, cities became engines of economic growth but also sources of pollution and inequality. In the 20th century, urbanization accelerated globally, particularly in the Global South, where rapid population growth often outpaced infrastructure development.
-      </p>
-      <img class="inline fade-in" src="https://images.unsplash.com/photo-1486308510493-aa64833634ef" alt="Green infrastructure"/>
+</main>
 
-      <h2 class="fade-in">Impact of Pollution on Public Health</h2>
-      <p class="fade-in">
-        Air pollution remains one of the leading causes of premature deaths worldwide. Fine particulate matter (PM2.5) penetrates deep into the lungs and bloodstream, causing respiratory and cardiovascular diseases. Noise pollution contributes to stress and cognitive decline, while water contamination spreads infectious diseases. By integrating environmental data with health statistics, policymakers can target interventions in neighborhoods most at risk.
-      </p>
+<footer>Prototype demo • Not for operational emergency decisions • Use official NASA/USGS resources for authoritative guidance</footer>
 
-      <h2 class="fade-in">Practical Solutions for Sustainable Futures</h2>
-      <p class="fade-in">
-        Building sustainable cities requires interventions that integrate ecological, social, and technological dimensions. Green infrastructure—such as urban forests, green roofs, and permeable pavements—provides natural cooling, reduces stormwater runoff, and enhances biodiversity within dense metropolitan areas. Renewable energy adoption, particularly solar and wind power, can be integrated into distributed microgrids to reduce fossil fuel dependency.
-      </p>
+<script>
+  // Theme toggle
+  const themeBtn = document.getElementById('themeBtn');
+  themeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('light');
+  });
 
-      <h2 class="fade-in">Emerging Technologies: AI and IoT</h2>
-      <p class="fade-in">
-        Artificial intelligence and the Internet of Things (IoT) are revolutionizing how cities function. Sensors embedded in traffic lights, water systems, and buildings collect real-time data. AI algorithms analyze this data to optimize traffic flows, detect leaks, or predict energy demand. Smart cities such as Singapore and Barcelona already deploy these technologies to improve efficiency and sustainability.
-      </p>
-      <img class="inline fade-in" src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e" alt="Future city concept"/>
+  // basic sync between sliders and number inputs
+  const diam = document.getElementById('diam');
+  const diamNum = document.getElementById('diamNum');
+  diam.addEventListener('input', ()=> diamNum.value = diam.value);
+  diamNum.addEventListener('input', ()=> diam.value = diamNum.value);
 
-      <h2 class="fade-in">Global Examples of Innovation</h2>
-      <p class="fade-in">
-        Copenhagen has committed to becoming carbon neutral by 2025 through wind energy and cycling infrastructure. Kigali in Rwanda has banned plastic bags and promotes green mobility. Curitiba in Brazil pioneered bus rapid transit, inspiring similar systems worldwide. These examples show that both developed and developing nations can lead in climate-smart urban planning.
-      </p>
+  const vel = document.getElementById('vel'), velNum = document.getElementById('velNum');
+  vel.addEventListener('input', ()=> velNum.value = vel.value);
+  velNum.addEventListener('input', ()=> vel.value = velNum.value);
 
-      <h2 class="fade-in">Future of Cities in 2100</h2>
-      <p class="fade-in">
-        By the year 2100, cities will likely merge into vast "urban corridors" where megacities connect across regions. Floating cities may emerge in response to rising sea levels, using renewable energy and circular economies. Underground and vertical cities could become a reality, maximizing land use while minimizing environmental impact. Technology will be central, but the ultimate success of these futures will depend on equitable governance and respect for planetary boundaries.
-      </p>
-    </article>
-  </main>
-  <footer>Built for quick sharing — save as index.html and deploy on GitHub Pages.</footer>
+  const angle = document.getElementById('angle'), angleNum = document.getElementById('angleNum');
+  angle.addEventListener('input', ()=> angleNum.value = angle.value);
+  angleNum.addEventListener('input', ()=> angle.value = angleNum.value);
 
-  <script>
-    function toggleTheme() {
-      const body = document.body;
-      body.dataset.theme = body.dataset.theme === "dark" ? "light" : "dark";
+  // Simulation calculations (transparent approximations)
+  // Many public outreach sites use similar approximations (kinetic energy, simple blast radii scaling).
+  function simulateImpact() {
+    const D_m = Number(diam.value); // diameter in meters
+    const v_kms = Number(vel.value); // km/s
+    const v = v_kms * 1000; // m/s
+    const rho = Number(document.getElementById('dens').value) || 3000; // kg/m3
+    const angleDeg = Number(angle.value);
+    const angleRad = angleDeg * Math.PI/180;
+    const target = document.getElementById('target').value;
+    const popDensity = Number(document.getElementById('pop').value); // people per km2
+
+    // mass estimate: volume * density (sphere)
+    const r = D_m/2;
+    const volume = (4/3) * Math.PI * Math.pow(r,3); // m3
+    const mass = volume * rho; // kg
+
+    // kinetic energy
+    const E = 0.5 * mass * v * v; // Joules
+    const E_Mt = E / 4.184e15; // megatons TNT
+
+    // Simplified crater scaling (very approximate outreach formula):
+    // transient crater diameter (meters) - simple scaling with D and v
+    // This is a simplified empirical relation for demonstration:
+    const crater_m = Math.max(5, 0.1 * Math.pow(D_m,0.78) * Math.pow(v_kms,0.44) * (rho/3000)**0.11 * 100); // scaled
+    // Instead of precise formula, show a safety floor
+
+    // Blast & thermal radii (behavioral thresholds — order-of-magnitude)
+    // (these are schematic approximations for educational visualization)
+    const blast_severe_m = Math.max(50, 200 * Math.pow(E_Mt, 0.33)); // meters
+    const blast_moderate_m = blast_severe_m * 2.5;
+    const thermal_ignition_m = Math.max(30, 150 * Math.pow(E_Mt, 0.25));
+
+    // Exposure estimate (people within severe blast radius)
+    // area km2 = π * R^2 / 1e6
+    const area_km2 = Math.PI * Math.pow(blast_severe_m,2) / 1e6;
+    const exposed = Math.round(area_km2 * popDensity);
+
+    // Prepare textual outputs
+    document.getElementById('energy').textContent = `${E_Mt.toFixed(2)} Mt TNT`;
+    document.getElementById('crater').textContent = `${Math.round(crater_m)} m (approx)`;
+    document.getElementById('blast').textContent = `${Math.round(blast_severe_m)} m (severe), ${Math.round(blast_moderate_m)} m (moderate)`;
+    document.getElementById('thermal').textContent = `${Math.round(thermal_ignition_m)} m (risk of ignition)`;
+    document.getElementById('exposed').textContent = `${exposed.toLocaleString()} people (approx)`;
+
+    // visualization: simple canvas with center = impact, circles scaled
+    drawVisualization(crater_m, blast_severe_m, blast_moderate_m, thermal_ignition_m, target);
+  }
+
+  // canvas draw
+  const canvas = document.getElementById('vis');
+  const ctx = canvas.getContext('2d');
+
+  function drawVisualization(crater, blastSevere, blastModerate, thermal, target) {
+    // clear
+    const DPR = window.devicePixelRatio || 1;
+    canvas.width = canvas.clientWidth * DPR;
+    canvas.height = canvas.clientHeight * DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+
+    // scaling: find largest radius (meters) and map to 90% of shortest canvas dimension
+    const maxR = Math.max(crater, blastModerate, thermal);
+    const pad = 30;
+    const W = canvas.clientWidth, H = canvas.clientHeight;
+    const scale = (Math.min(W,H)-pad) / (2*maxR || 1);
+
+    const cx = W/2, cy = H/2;
+
+    // background
+    ctx.fillStyle = getComputedStyle(document.body).classList.contains('light') ? '#f6f9fc' : '#0b1220';
+    ctx.fillRect(0,0,W,H);
+
+    // draw ocean/land background marker
+    ctx.fillStyle = target === 'sea' ? 'rgba(0,60,120,0.25)' : 'rgba(20,80,20,0.12)';
+    ctx.fillRect(0,H-60,W,60);
+
+    // helper to draw circle with label
+    function drawCircle(radius_m, color, label) {
+      const rPx = radius_m * scale;
+      ctx.beginPath();
+      ctx.arc(cx, cy, rPx, 0, Math.PI*2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      // label
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '12px system-ui, Arial';
+      ctx.fillText(label, cx + rPx + 6, cy);
     }
-    function toggleLang() {
-      const body = document.body;
-      if (body.getAttribute("dir") === "ltr") {
-        body.setAttribute("dir","rtl");
-        body.lang = "ar";
-        document.querySelector(".brand").textContent = "نظرة علمية — البيئة الحضرية";
-        document.querySelector(".buttons button:last-child").textContent = "English";
+
+    // draw order: moderate (light), severe (darker), crater (dark center)
+    drawCircle(blastModerate, 'rgba(255,160,60,0.12)', 'Moderate blast');
+    drawCircle(blastSevere, 'rgba(255,80,30,0.20)', 'Severe blast');
+    drawCircle(thermal, 'rgba(255,200,60,0.08)', 'Thermal risk');
+    drawCircle(crater, 'rgba(80,80,80,0.5)', 'Crater (approx)');
+
+    // central marker
+    ctx.beginPath();
+    ctx.arc(cx,cy,4,0,Math.PI*2);
+    ctx.fillStyle = '#fffb';
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Impact', cx+6, cy+4);
+  }
+
+  // run button
+  document.getElementById('run').addEventListener('click', simulateImpact);
+
+  // reset button resets sliders
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    diam.value = diamNum.value = 120;
+    vel.value = velNum.value = 17;
+    document.getElementById('dens').value = 3000;
+    angle.value = angleNum.value = 45;
+    document.getElementById('target').value = 'land';
+    document.getElementById('pop').value = 1500;
+    document.getElementById('energy').textContent = '—';
+    document.getElementById('crater').textContent = '—';
+    document.getElementById('blast').textContent = '—';
+    document.getElementById('thermal').textContent = '—';
+    document.getElementById('exposed').textContent = '—';
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  });
+
+  // Scroll animation: fade-slide -> add/remove visible to create appear/disappear effect
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.intersectionRatio > 0.12){
+        e.target.classList.add('visible');
       } else {
-        body.setAttribute("dir","ltr");
-        body.lang = "en";
-        document.querySelector(".brand").textContent = "Urban Environment — Scientific Overview";
-        document.querySelector(".buttons button:last-child").textContent = "عربي";
+        e.target.classList.remove('visible');
       }
-    }
+    });
+  }, {threshold:[0,0.12,0.6]});
 
-    // Scroll animation observer
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("visible");
-        }
-      });
-    }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-slide').forEach(n=> io.observe(n));
 
-    document.querySelectorAll(".fade-in").forEach(el => observer.observe(el));
-  </script>
+  // run a default simulation to show initial visualization
+  simulateImpact();
+</script>
+
 </body>
 </html>
