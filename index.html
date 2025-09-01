@@ -1,401 +1,467 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Impactor-2025 — Challenge & Simulator</title>
-<meta name="description" content="Impactor-2025 challenge: bilingual scientific article, scroll animation, and an interactive mini-simulator."/>
-<style>
-  :root{
-    --bg:#0b1220; --card:#0f1720; --text:#e6eef8; --muted:#9fb3c8; --accent:#22d3ee;
-    --glass: rgba(255,255,255,0.03);
-  }
-  body.light{
-    --bg:#fafbff; --card:#ffffff; --text:#0b1220; --muted:#475569; --accent:#0ea5e9; --glass: rgba(0,0,0,0.04);
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial,sans-serif;
-    background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;
-    line-height:1.65; transition:background .25s, color .25s;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Impactor — Learn & Simulate</title>
+  <style>
+    :root {
+      --bg: #0b0e13;
+      --text: #e8edf2;
+      --muted: #a8b3c2;
+      --card: #121722;
+      --accent: #7dd3fc; /* light blue */
+      --accent-2: #fca5a5; /* soft red */
+      --good: #86efac;
+      --warn: #fde68a;
+      --bad: #fca5a5;
+      --shadow: 0 8px 30px rgba(0,0,0,.35);
+    }
+    [data-theme="light"]{
+      --bg: #f7fafc;
+      --text: #0b1220;
+      --muted: #415062;
+      --card: #ffffff;
+      --accent: #2563eb; /* blue */
+      --accent-2: #dc2626; /* red */
+      --good: #16a34a;
+      --warn: #b45309;
+      --bad: #b91c1c;
+      --shadow: 0 8px 30px rgba(2,12,27,.08);
+    }
 
-  /* header */
-  header{
-    position:sticky; top:0; z-index:999; display:flex; align-items:center; justify-content:space-between;
-    padding:12px 16px; backdrop-filter: blur(6px); background: linear-gradient(180deg,var(--glass),transparent);
-    border-bottom:1px solid rgba(255,255,255,0.02);
-  }
-  .brand{font-weight:700; font-size:1rem}
-  .controls{display:flex; gap:8px; align-items:center}
-  /* toggle styles */
-  .toggle {
-    position:relative; width:54px; height:30px; background:var(--card); border-radius:16px; border:1px solid rgba(255,255,255,0.03);
-    display:inline-flex; align-items:center; padding:3px; cursor:pointer;
-  }
-  .toggle .knob { width:24px; height:24px; border-radius:50%; background:var(--text); transition:transform .2s ease; }
-  .toggle[data-on="true"] .knob { transform:translateX(24px); }
-  .btn-plain{background:transparent; border:1px solid rgba(255,255,255,0.03); color:var(--text); padding:8px 10px; border-radius:8px; cursor:pointer}
+    * { box-sizing: border-box; }
+    html, body { height: 100%; scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
+      background: radial-gradient(1200px 700px at 80% -10%, rgba(125, 211, 252, .12), transparent 70%),
+                  radial-gradient(1000px 600px at 10% -20%, rgba(252, 165, 165, .10), transparent 65%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
 
-  main.wrap{max-width:920px; margin:14px auto; padding:12px;}
-  .block{background:var(--card); border-radius:14px; padding:18px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.02); box-shadow:0 12px 30px rgba(0,0,0,0.18)}
-  h1,h2{margin:0 0 10px}
-  p.lead{color:var(--muted); margin:0 0 12px}
-  img.hero{width:100%; height:260px; object-fit:cover; border-radius:10px; margin:12px 0}
+    /* simple scroll animations */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity .8s ease-out, transform .8s ease-out;
+    }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
 
-  /* scroll animation classes */
-  .fade-slide{opacity:0; transform:translateY(28px); transition:opacity .65s ease, transform .65s ease}
-  .fade-slide.visible{opacity:1; transform:none}
+    /* Header */
+    .header { position: sticky; top: 0; z-index: 50; backdrop-filter: saturate(180%) blur(12px); background: color-mix(in srgb, var(--bg) 92%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--muted) 16%, transparent); }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 12px 0; }
+    .logo { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: var(--shadow); }
+    .title { font-weight: 800; letter-spacing: .2px; }
 
-  /* mini-game / simulator */
-  .sim{display:grid; grid-template-columns:1fr; gap:12px}
-  @media(min-width:860px){ .sim{grid-template-columns: 360px 1fr} }
-  .panel{padding:12px; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); border:1px solid rgba(255,255,255,0.02)}
-  label{display:block; font-weight:700; margin:8px 0 6px}
-  input[type=number], select{width:100%; padding:8px; border-radius:8px; border:1px solid rgba(0,0,0,0.08); background:transparent; color:var(--text)}
-  input[type=range]{width:100%}
-  .stat{font-weight:700; margin-top:8px}
-  canvas#vis{width:100%; height:320px; border-radius:10px; background:linear-gradient(180deg, rgba(0,0,0,0.03), transparent)}
+    /* Controls */
+    .controls { display: flex; gap: 8px; align-items: center; }
+    .btn { border: 1px solid color-mix(in srgb, var(--muted) 24%, transparent); background: var(--card); color: var(--text); padding: 8px 12px; border-radius: 12px; cursor: pointer; transition: transform .06s ease, background .2s ease, border-color .2s ease; box-shadow: var(--shadow); font-weight: 700; font-size: 14px; }
+    .btn:active { transform: translateY(1px) scale(.99); }
+    .seg { display: inline-flex; gap: 2px; background: var(--card); border-radius: 12px; padding: 2px; border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent); }
+    .seg button { border-radius: 10px; padding: 8px 10px; border: none; background: transparent; color: var(--text); font-weight: 700; cursor: pointer; }
+    .seg button.active { background: color-mix(in srgb, var(--accent) 20%, transparent); }
 
-  footer{color:var(--muted); text-align:center; padding:14px 10px; font-size:.95rem}
+    /* Hero */
+    .hero { padding: 32px 0 8px; }
+    .hero h1 { font-size: clamp(26px, 4.5vw, 42px); line-height: 1.15; margin: 0 0 10px; }
+    .sub { color: var(--muted); margin: 0; max-width: 70ch; }
+    .meta { display:flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    .chip { font-size: 12px; padding: 6px 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--muted) 24%, transparent); color: var(--muted); background: color-mix(in srgb, var(--card) 60%, transparent); }
 
-  /* small tweaks */
-  .smallmuted{color:var(--muted); font-size:.95rem}
-  .kbd{display:inline-block; padding:.08rem .4rem; border-radius:6px; background:rgba(0,0,0,0.06); margin-left:6px; font-size:.85rem}
-  /* Arabic support - we'll set dir on documentElement when switching */
-</style>
+    /* Sections */
+    section { padding: 18px 0; }
+    .card { background: var(--card); border-radius: 18px; padding: 16px; border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent); box-shadow: var(--shadow); }
+    h2 { font-size: clamp(18px, 3.2vw, 26px); margin: 0 0 10px; }
+    p { margin: 0 0 10px; }
+    ul { margin: 0; padding-left: 18px; }
+
+    /* Grid */
+    .grid { display: grid; gap: 16px; }
+    @media (min-width: 840px) { .grid-2 { grid-template-columns: 1.2fr .8fr; } }
+
+    /* Mini-game */
+    .form { display: grid; gap: 10px; }
+    .field { display: grid; gap: 6px; }
+    label { font-weight: 700; font-size: 13px; color: var(--muted); }
+    input, select { appearance: none; width: 100%; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--bg) 70%, white 0%); border: 1px solid color-mix(in srgb, var(--muted) 26%, transparent); color: var(--text); }
+    .inline { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .result { display: grid; gap: 8px; font-size: 14px; color: var(--text); background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 50%), var(--card); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 16px; padding: 12px; }
+    .stat { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border-radius: 12px; background: color-mix(in srgb, var(--bg) 50%, transparent); border: 1px dashed color-mix(in srgb, var(--muted) 24%, transparent); }
+    .stat strong { font-size: 16px; }
+
+    .note { font-size: 12px; color: var(--muted); }
+
+    /* RTL tweaks */
+    [dir="rtl"] .row { flex-direction: row-reverse; }
+    [dir="rtl"] .inline { direction: rtl; }
+    [dir="rtl"] ul { padding-left: 0; padding-right: 18px; }
+  </style>
 </head>
-<body>
-
-<header>
-  <div class="brand" id="brand" data-en="Impactor-2025 — Challenge" data-ar="Impactor-2025 — التحدي">Impactor-2025 — Challenge</div>
-  <div class="controls">
-    <!-- language toggle (text + tiny toggle) -->
-    <button id="langBtn" class="btn-plain" data-en="Arabic" data-ar="English">Arabic</button>
-
-    <!-- theme toggle -->
-    <div id="themeToggle" class="toggle" aria-label="Theme toggle" role="button" tabindex="0" data-on="false" title="Toggle light/dark">
-      <div class="knob"></div>
-    </div>
-  </div>
-</header>
-
-<main class="wrap">
-
-  <!-- HERO / INTRO -->
-  <section class="block fade-slide" id="intro">
-    <h1 id="title" data-en="Integrating NASA & USGS data to understand Impactor-2025" data-ar="دمج بيانات ناسا وUSGS لفهم Impactor-2025">Integrating NASA & USGS data to understand Impactor-2025</h1>
-    <p class="lead" id="subtitle" data-en="A scientific overview of the data, modeling, visualization and decision-support challenges for a newly discovered near-Earth asteroid." data-ar="نظرة علمية على البيانات، النمذجة، التصور ودعم اتخاذ القرار لكويكب تم اكتشافه حديثًا قرب الأرض.">A scientific overview of the data, modeling, visualization and decision-support challenges for a newly discovered near-Earth asteroid.</p>
-    <p class="smallmuted" id="summaryShort" data-en="This single-page demo contains a long-form article, scroll animations, and a small interactive simulator for outreach and planning discussion." data-ar="يتضمن هذا العرض صفحة واحدة بها مقال مطول، تأثيرات تمرير، ومحاكي تفاعلي صغير لأغراض التوعية ومناقشة التخطيط.">This single-page demo contains a long-form article, scroll animations, and a small interactive simulator for outreach and planning discussion.</p>
-    <img class="hero fade-slide" src="https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?auto=format&fit=crop&w=1400&q=80" alt="Space & Earth" id="heroImg" data-en="Near-Earth space view" data-ar="منظور فضائي للأرض">
-  </section>
-
-  <!-- DATA SOURCES -->
-  <section class="block fade-slide" id="data">
-    <h2 data-en="Data sources & integration" data-ar="مصادر البيانات ودمجها">Data sources & integration</h2>
-    <p data-en="NASA provides catalogs of near-Earth objects (orbital elements, size and albedo estimates, and impact-risk pages maintained by JPL/CNEOS). USGS provides Earth surface datasets: digital elevation models, land cover, coastal bathymetry and infrastructure proxies. Integrating those sources permits converting orbital probabilities into spatial risk maps overlaying terrain and population." data-ar="توفر ناسا فهارس للأجرام القريبة من الأرض (المسارات المدارية، تقديرات القطر والانعكاس). يقدم USGS بيانات عن سطح الأرض: نماذج الارتفاع الرقمي، غطاء الأرض، سواحل وقيعان البحار وبدائل للبنية التحتية. يتيح دمج هذه المصادر تحويل احتمالات المدار إلى خرائط مخاطرة مكانية تضع التضاريس والسكان فوق بعضها.">NASA provides catalogs of near-Earth objects (orbital elements, size and albedo estimates, and impact-risk pages maintained by JPL/CNEOS). USGS provides Earth surface datasets: digital elevation models, land cover, coastal bathymetry and infrastructure proxies. Integrating those sources permits converting orbital probabilities into spatial risk maps overlaying terrain and population.</p>
-    <img class="hero fade-slide" src="https://images.unsplash.com/photo-1549576490-b0b4831ef60a?auto=format&fit=crop&w=1400&q=80" alt="Datasets and maps" data-en="Datasets & maps" data-ar="مجموعات بيانات وخرائط">
-  </section>
-
-  <!-- SCIENTIFIC ARTICLE LONG -->
-  <section class="block fade-slide" id="article">
-    <h2 data-en="Science, models and uncertainty" data-ar="العلم، النماذج وعدم اليقين">Science, models and uncertainty</h2>
-
-    <!-- Long form paragraphs with data-en/data-ar (aim ~1000+ words total across blocks) -->
-    <div class="fade-slide" data-en="<p>Modeling an asteroid threat requires multiple coupled components. First, orbital solutions from radar and optical tracking define a probability distribution (covariance) of future positions; Monte Carlo ensembles propagate that distribution forward to identify potential impact corridors. Second, atmospheric entry physics determine whether the body will fragment and airburst or reach the surface; this depends on size, speed, density and entry angle. Third, empirical scaling laws estimate crater sizes and blast/thermal effects when the body interacts with the surface. Finally, geospatial layers (elevation, landcover, population, critical infrastructure) convert physical impacts to human consequences and economic exposure.</p>" data-ar="<p>تتطلب نمذجة تهديد كويكب عدة مكونات مترابطة. أولاً، تحدد حلول المدار من تتبع الرادار والبصريات توزيعًا احتماليًا لمواقع الجسم المستقبلية؛ تنتشر مجموعات مونت كارلو هذا التوزيع لتحديد ممرات الاصطدام المحتملة. ثانيًا، تحدد فيزياء الدخول الجوي ما إذا كان الجسم سيتفتت وينفجر جوياً أو يصل إلى السطح؛ يعتمد ذلك على القطر والسرعة والكثافة وزاوية الدخول. ثالثًا، تقدّر قوانين التحجيم التجريبية أحجام الحفر وتأثيرات الانفجار/الحرارة عند تفاعل الجسم مع السطح. وأخيرًا، تحويل الطبقات الجغرافية المكانية (الارتفاع، غطاء الأرض، السكان، البنية التحتية الحيوية) يحول التأثيرات الفيزيائية إلى عواقب بشرية وتعرّض اقتصادي.</p>">
-      <p>Modeling an asteroid threat requires multiple coupled components. First, orbital solutions from radar and optical tracking define a probability distribution (covariance) of future positions; Monte Carlo ensembles propagate that distribution forward to identify potential impact corridors. Second, atmospheric entry physics determine whether the body will fragment and airburst or reach the surface; this depends on size, speed, density and entry angle. Third, empirical scaling laws estimate crater sizes and blast/thermal effects when the body interacts with the surface. Finally, geospatial layers (elevation, landcover, population, critical infrastructure) convert physical impacts to human consequences and economic exposure.</p>
-    </div>
-
-    <div class="fade-slide" data-en="<p>Uncertainty is central. Presenting single-number estimates is misleading; decision-support requires probabilistic bands and sensitivity toggles (e.g., conservative vs optimistic density or velocity). Visualizations should allow users to explore scenarios and see how assumptions shift the outcome. For outreach, providing clear central estimates with intuitive labels (local, regional, continental, global) combined with confidence intervals is effective.</p>" data_ar="<p>اليقين غير مؤكد ويعد محوريًا. عرض تقديرات رقمية مفردة مضلل؛ يتطلب دعم القرار نطاقات احتمالية ومفاتيح تغيير الحساسيات (مثلاً كثافة أو سرعة محافظة مقابل متفائلة). يجب أن تسمح التصورات للمستخدمين باستكشاف السيناريوهات ومشاهدة كيف تغير الفرضيات النتائج. للتوعية، تقديم تقديرات مركزية واضحة مع تسميات بديهية (محلي، إقليمي، قاري، عالمي) مع فترات ثقة يكون فعالًا.</p>">
-      <p>Uncertainty is central. Presenting single-number estimates is misleading; decision-support requires probabilistic bands and sensitivity toggles (e.g., conservative vs optimistic density or velocity). Visualizations should allow users to explore scenarios and see how assumptions shift the outcome. For outreach, providing clear central estimates with intuitive labels (local, regional, continental, global) combined with confidence intervals is effective.</p>
-    </div>
-
-    <div class="fade-slide" data-en="<p>Operational integration is needed: automated ingestion of improved orbital solutions (JPL), terrain tiles and population rasters (USGS and WorldPop), and a compute engine to run Monte Carlo ensembles. Heavy lifting (ensemble propagation, high-fidelity entry modeling, hydrodynamic tsunami coupling) is best performed server-side; the browser receives pre-computed probability surfaces and effect kernels for interactive exploration.</p>" data_ar="<p>يتطلب التكامل التشغيلي: استيعابًا تلقائيًا لحلول المدار المحسنة (JPL)، وبلاطات التضاريس وراستر السكان (USGS وWorldPop)، ومحرك حسابي لتشغيل مجموعات مونت كارلو. من الأفضل إجراء الأعمال الثقيلة (انتشار المجموعات، نمذجة الدخول عالية الدقة، ربط نماذج تسونامي هيدروديناميكية) على الخادم؛ يتلقى المتصفح أسطح احتمالية و"نوى" تأثيرات محسوبة مسبقًا للاستكشاف التفاعلي.</p>">
-      <p>Operational integration is needed: automated ingestion of improved orbital solutions (JPL), terrain tiles and population rasters (USGS and WorldPop), and a compute engine to run Monte Carlo ensembles. Heavy lifting (ensemble propagation, high-fidelity entry modeling, hydrodynamic tsunami coupling) is best performed server-side; the browser receives pre-computed probability surfaces and effect kernels for interactive exploration.</p>
-    </div>
-
-    <div class="fade-slide" data-en="<p>Finally, trust and clarity matter. Every visualization must show sources, assumptions and uncertainty. Provide downloadable reports for decision-makers with scenario parameters, maps of affected assets, and recommended actions with estimated resource needs. When communication is transparent, stakeholders can make informed trade-offs between costly deflection missions and localized emergency response.</p>" data_ar="<p>أخيرًا، الثقة والوضوح مهمان. يجب أن يعرض كل تصور المصادر والافتراضات وعدم اليقين. قدّم تقارير قابلة للتنزيل لصناع القرار بمقاييس السيناريو، وخرائط الأصول المتأثرة، والإجراءات الموصى بها مع تقديرات الموارد. عندما يكون التواصل شفافًا، يمكن لأصحاب المصلحة إجراء مقايضات مستنيرة بين مهام تغيير المدار المكلفة والاستجابة الطارئة المحلية.</p>">
-      <p>Finally, trust and clarity matter. Every visualization must show sources, assumptions and uncertainty. Provide downloadable reports for decision-makers with scenario parameters, maps of affected assets, and recommended actions with estimated resource needs. When communication is transparent, stakeholders can make informed trade-offs between costly deflection missions and localized emergency response.</p>
-    </div>
-
-  </section>
-
-  <!-- SIMULATOR -->
-  <section class="block fade-slide" id="simulator">
-    <h2 data-en="Mini Impact Simulator (simple, educational)" data-ar="محاكي الاصطدام المصغّر (تثقيفي، مبسّط)">Mini Impact Simulator (simple, educational)</h2>
-    <p class="smallmuted" data-en="Enter basic parameters and press Simulate. Results are approximate outreach-level estimates — not operational predictions." data-ar="أدخل المعلمات الأساسية واضغط محاكاة. النتائج تقريبية لغرض التوعية وليست تنبؤات تشغيلية.">Enter basic parameters and press Simulate. Results are approximate outreach-level estimates — not operational predictions.</p>
-
-    <div class="sim">
-      <div class="panel" id="controls">
-        <label data-en="Asteroid diameter (km)" data-ar="قطر الكويكب (كم)">Asteroid diameter (km)</label>
-        <input id="dia" type="range" min="0.01" max="5" step="0.01" value="0.12">
-        <input id="diaNum" type="number" min="0.01" max="5" step="0.01" value="0.12">
-
-        <label data-en="Velocity (km/s)" data_ar="السرعة (كم/ث)">Velocity (km/s)</label>
-        <input id="vel" type="range" min="5" max="72" step="0.1" value="17">
-        <input id="velNum" type="number" min="5" max="72" step="0.1" value="17">
-
-        <label data-en="Entry angle (deg)" data_ar="زاوية الدخول (°)">Entry angle (deg)</label>
-        <input id="angle" type="range" min="10" max="90" value="45">
-        <input id="angleNum" type="number" min="10" max="90" value="45">
-
-        <label data-en="Target" data-ar="الهدف">Target</label>
-        <select id="target">
-          <option value="land" data-en="Land" data-ar="يابسة">Land</option>
-          <option value="sea" data-en="Sea" data_ar="بحر">Sea</option>
-        </select>
-
-        <label data-en="Nearby population density (people / km²)" data_ar="كثافة السكان بالقرب (شخص/كم²)">Nearby population density (people / km²)</label>
-        <input id="pop" type="number" min="0" max="100000" step="10" value="1500">
-
-        <div style="margin-top:10px">
-          <button id="run" class="btn-plain" data-en="Simulate impact" data-ar="محاكاة الاصطدام">Simulate impact</button>
+<body data-theme="dark">
+  <header class="header">
+    <div class="wrap">
+      <div class="row">
+        <div class="brand">
+          <div class="logo"></div>
+          <div class="title">Impactor</div>
         </div>
-
-        <p class="smallmuted" data-en="Tip: increase diameter and/or speed for larger effects. Try both land and sea impacts." data_ar="نصيحة: زد القطر و/أو السرعة لتأثيرات أكبر. جرّب الاصطدام على اليابسة والبحر.">Tip: increase diameter and/or speed for larger effects. Try both land and sea impacts.</p>
-      </div>
-
-      <div class="panel" id="results">
-        <div id="summary">
-          <div class="stat"><span data-en="Estimated energy:" data_ar="الطاقة (تقريبي):">Estimated energy:</span> <span id="energy">—</span></div>
-          <div class="stat"><span data-en="Crater (approx):" data_ar="قُطر الفوهة (تقريبي):">Crater (approx):</span> <span id="crater">—</span></div>
-          <div class="stat"><span data-en="Damage level:" data_ar="مستوى الدمار:">Damage level:</span> <span id="level">—</span></div>
-          <div class="stat"><span data-en="Additional effects:" data_ar="تأثيرات إضافية:">Additional effects:</span> <span id="effects">—</span></div>
-          <div class="stat"><span data-en="People potentially exposed:" data_ar="عدد الأشخاص المحتمل تعرضهم:">People potentially exposed:</span> <span id="exposed">—</span></div>
+        <div class="controls">
+          <div class="seg" aria-label="Theme">
+            <button id="theme-dark" class="active">🌙</button>
+            <button id="theme-light">☀️</button>
+          </div>
+          <div class="seg" aria-label="Language">
+            <button id="lang-en" class="active">EN</button>
+            <button id="lang-ar">AR</button>
+          </div>
         </div>
-
-        <canvas id="vis" width="720" height="380" aria-label="Impact visualization"></canvas>
-        <p class="smallmuted" id="visNote" data-en="Schematic visualization — circle radii are scaled for communication." data_ar="تصور تخطيطي — نصف أقطار الدوائر مقيّسة للتوضيح.">Schematic visualization — circle radii are scaled for communication.</p>
       </div>
     </div>
-  </section>
+  </header>
 
-  <!-- MITIGATION -->
-  <section class="block fade-slide" id="mitigation">
-    <h2 data-en="Mitigation & decision support" data_ar="التخفيف ودعم اتخاذ القرار">Mitigation & decision support</h2>
-    <p data-en="Mitigation options depend on warning time. Long lead times allow orbital deflection (kinetic impactors or gravity tractors). Short lead times require robust evacuation, sheltering, and asset protection. Visualization tools help compare options by estimating affected populations and infrastructure needs." data_ar="تعتمد خيارات التخفيف على زمن التحذير. تتيح الأوقات الطويلة تغيير المدار (مقذوفات حركية أو جرارات جاذبية). تتطلب الأوقات القصيرة خطط إخلاء قوية وملاجئ وحماية الأصول. تساعد أدوات التصور في مقارنة الخيارات عبر تقدير السكان المتأثرين واحتياجات البنية التحتية.">Mitigation options depend on warning time. Long lead times allow orbital deflection (kinetic impactors or gravity tractors). Short lead times require robust evacuation, sheltering, and asset protection. Visualization tools help compare options by estimating affected populations and infrastructure needs.</p>
-    <img class="hero fade-slide" src="https://images.unsplash.com/photo-1529257414773-1960f6f4f3fb?auto=format&fit=crop&w=1400&q=80" alt="Emergency planning" data-en="Emergency planning" data_ar="التخطيط للطوارئ">
-  </section>
+  <main class="wrap">
+    <section class="hero fade-in">
+      <h1 data-i18n="hero_title">Impactor: a hypothetical near‑Earth asteroid scenario</h1>
+      <p class="sub" data-i18n="hero_sub">This mobile‑friendly page is a learning tool. It summarizes the imagined asteroid “Impactor” scenario and lets you try a safe, toy calculator that estimates rough damage from different asteroid sizes. It is not an official NASA page.</p>
+      <div class="meta">
+        <span class="chip" data-i18n="chip_edu">Educational</span>
+        <span class="chip" data-i18n="chip_hypo">Hypothetical scenario</span>
+        <span class="chip" data-i18n="chip_mobile">Mobile‑first</span>
+      </div>
+    </section>
 
-  <!-- FUTURE -->
-  <section class="block fade-slide" id="future">
-    <h2 data-en="Final thoughts & next steps" data_ar="أفكار ختامية وخطوات مقبلة">Final thoughts & next steps</h2>
-    <p data-en="Combining NASA orbital data with USGS terrain and population layers into transparent, interactive visualizations enables both public education and informed policymaking. A full operational tool couples backend Monte Carlo orbital propagation and high-fidelity entry models with front-end interactive maps, dashboards, and downloadable reports. This page demonstrates the concept and a simple educational simulator that can be extended into a production system." data_ar="يُمكّن دمج بيانات ناسا المدارية مع طبقات تضاريس وسكان USGS في تصورات تفاعلية وشفافة كلًا من التثقيف العام وصنع القرار المستنير. يربط الأداة التشغيلية الكاملة انتشار مونت كارلو المداري على الخادم ونماذج دخول عالية الدقة بواجهات خرائط تفاعلية ولوحات بيانات وتقارير قابلة للتنزيل. يعرض هذا الموقع الفكرة ومحاكيًا تعليميًا بسيطًا يمكن توسيعه إلى نظام إنتاجي.">Combining NASA orbital data with USGS terrain and population layers into transparent, interactive visualizations enables both public education and informed policymaking. A full operational tool couples backend Monte Carlo orbital propagation and high-fidelity entry models with front-end interactive maps, dashboards, and downloadable reports. This page demonstrates the concept and a simple educational simulator that can be extended into a production system.</p>
-  </section>
+    <section class="grid grid-2 fade-in">
+      <article class="card">
+        <h2 data-i18n="about_title">About “Impactor”</h2>
+        <p data-i18n="about_p1">“Impactor” here refers to a fictional near‑Earth object used for public outreach and practice. It is a placeholder name, not a real NASA‑designated asteroid. The purpose is to explain how asteroid risk is evaluated and what factors control potential damage.</p>
+        <p data-i18n="about_p2">In reality, professional surveys routinely find, track, and update orbits of asteroids. Most discovered objects pose no threat, and risk assessments are updated as more data arrives. This page avoids real‑time claims and sticks to a generic educational scenario.</p>
+        <ul>
+          <li data-i18n="about_li1">Asteroid damage depends mostly on size (diameter), speed, density/composition, and entry angle.</li>
+          <li data-i18n="about_li2">Small objects usually break up in the atmosphere; larger, denser, or faster objects carry more energy and can reach the ground.</li>
+          <li data-i18n="about_li3">Even for energetic events, actual casualties depend on where it strikes and local population density.</li>
+        </ul>
+      </article>
+      <aside class="card">
+        <h2 data-i18n="facts_title">Key facts (for our scenario)</h2>
+        <ul>
+          <li data-i18n="facts_li1"><strong>Type:</strong> Stony or iron (choose in the simulator)</li>
+          <li data-i18n="facts_li2"><strong>Speed:</strong> Typical 12–25 km/s at entry</li>
+          <li data-i18n="facts_li3"><strong>Angle:</strong> 30–60° common; shallow angles increase airburst chance</li>
+          <li data-i18n="facts_li4"><strong>Note:</strong> These are generic ranges for learning, not an active warning</li>
+        </ul>
+      </aside>
+    </section>
 
-</main>
+    <section class="card fade-in">
+      <h2 data-i18n="sim_title">Mini‑game: rough impact outcome estimator</h2>
+      <p class="note" data-i18n="sim_note">This toy model uses very simplified physics (energy scaling similar to nuclear‑blast rules of thumb). It’s only for educational play—real assessments use detailed simulations.</p>
 
-<footer class="fade-slide" id="foot" data-en="Prototype demo — not for operational emergency decisions" data_ar="نموذج توضيحي — غير مخصص لقرارات الطوارئ">Prototype demo — not for operational emergency decisions</footer>
+      <div class="grid">
+        <div class="form">
+          <div class="inline">
+            <div class="field">
+              <label data-i18n="f_diameter">Asteroid diameter (meters)</label>
+              <input id="diameter" type="number" min="1" step="1" value="120"/>
+            </div>
+            <div class="field">
+              <label data-i18n="f_speed">Entry speed (km/s)</label>
+              <input id="speed" type="number" min="5" step="0.1" value="17"/>
+            </div>
+          </div>
+          <div class="inline">
+            <div class="field">
+              <label data-i18n="f_density">Composition</label>
+              <select id="density">
+                <option value="3000" selected data-i18n="comp_stony">Stony (~3000 kg/m³)</option>
+                <option value="7800" data-i18n="comp_iron">Iron (~7800 kg/m³)</option>
+                <option value="1500" data-i18n="comp_comet">Porous/icy (~1500 kg/m³)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label data-i18n="f_angle">Entry angle (degrees)</label>
+              <input id="angle" type="number" min="10" max="90" step="1" value="45"/>
+            </div>
+          </div>
+          <div class="inline">
+            <div class="field">
+              <label data-i18n="f_pop">Population density (people/km²)</label>
+              <input id="pop" type="number" min="0" step="1" value="3000"/>
+            </div>
+            <div class="field">
+              <label data-i18n="f_surface">Surface</label>
+              <select id="surface">
+                <option value="land" selected data-i18n="surface_land">Land</option>
+                <option value="water" data-i18n="surface_water">Water</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn" id="run" data-i18n="run_btn">Run estimation</button>
+        </div>
 
-<script>
-/* -------------------------
-   Language & Theme handling
-   ------------------------- */
+        <div class="result" id="result" hidden>
+          <div class="stat"><span data-i18n="r_yield">Estimated energy</span><strong id="outYield">—</strong></div>
+          <div class="stat"><span data-i18n="r_severe">Severe damage radius (~5 psi)</span><strong id="outSevere">—</strong></div>
+          <div class="stat"><span data-i18n="r_moderate">Moderate damage radius (~2 psi)</span><strong id="outModerate">—</strong></div>
+          <div class="stat"><span data-i18n="r_thermal">Thermal/overpressure reach</span><strong id="outThermal">—</strong></div>
+          <div class="stat"><span data-i18n="r_casualties">Very rough casualty estimate</span><strong id="outCasualties">—</strong></div>
+          <p class="note" data-i18n="r_disclaimer">Disclaimer: Heuristic only. Geography, buildings, and emergency response matter a lot.</p>
+        </div>
+      </div>
+    </section>
 
-const langBtn = document.getElementById('langBtn');
-const themeToggle = document.getElementById('themeToggle');
-const themeOn = () => document.body.classList.add('light');
-const themeOff = () => document.body.classList.remove('light');
+    <section class="grid grid-2 fade-in">
+      <article class="card">
+        <h2 data-i18n="prep_title">How risk is reduced</h2>
+        <ul>
+          <li data-i18n="prep_li1">Sky surveys track objects and refine their orbits with additional observations.</li>
+          <li data-i18n="prep_li2">Planetary defense exercises practice communication and decision‑making.</li>
+          <li data-i18n="prep_li3">If a future object truly threatened Earth, mitigation concepts include kinetic impactors and, with long lead times, other deflection options.</li>
+        </ul>
+      </article>
+      <aside class="card">
+        <h2 data-i18n="learn_title">Learn more safely</h2>
+        <p class="note" data-i18n="learn_p">When you read about asteroids online, check dates and sources. Risk numbers can change quickly as new observations narrow the uncertainty.</p>
+      </aside>
+    </section>
 
-function setLanguage(l){
-  // switch data-en / data-ar content for each element
-  document.querySelectorAll('[data-en][data-ar]').forEach(el=>{
-    // prefer innerHTML to allow small lists
-    el.innerHTML = (l==='en') ? el.getAttribute('data-en') : el.getAttribute('data-ar');
-  });
-  // update document dir and lang
-  if(l==='ar'){ document.documentElement.lang = 'ar'; document.documentElement.dir = 'rtl'; }
-  else { document.documentElement.lang = 'en'; document.documentElement.dir = 'ltr'; }
-  localStorage.setItem('siteLang', l);
-  // update select options (land/sea)
-  document.querySelectorAll('#target option').forEach(opt=>{
-    if(opt.dataset.en && opt.dataset.ar) opt.textContent = (l==='en' ? opt.dataset.en : opt.dataset.ar);
-  });
-  // update buttons (langBtn shows opposite or a hint)
-  langBtn.textContent = (l==='en') ? langBtn.getAttribute('data-en') : langBtn.getAttribute('data-ar');
-  // redraw canvas labels for language change
-  simulateImpact();
-}
+    <section class="card fade-in">
+      <h2 data-i18n="extra_title">Extra Information</h2>
+      <p data-i18n="extra_p1">Asteroids like Impactor help researchers model what might happen if a real threat were ever discovered. They calculate orbital paths, track uncertainties, and simulate different impact outcomes using high‑performance computers.</p>
+      <p data-i18n="extra_p2">The most critical parameters are size, speed, density, and angle of approach. Combined, these determine the amount of energy released during entry. For example, a 300‑meter iron asteroid at 20 km/s carries more destructive energy than the largest nuclear weapons ever made.</p>
+      <p data-i18n="extra_p3">Modern planetary defense relies on early detection. The sooner a hazardous object is discovered, the more options humanity has for gentle deflection, such as using kinetic impactors or gravity tractors. This is why telescopes like Pan‑STARRS and surveys like NASA’s NEO Surveyor are essential.</p>
+      <p data-i18n="extra_p4">Historical events like the Tunguska explosion (1908) and the Chelyabinsk airburst (2013) show how even relatively small asteroids can cause significant damage. These events motivate better monitoring and preparation worldwide.</p>
+      <p data-i18n="extra_p5">NASA and ESA have already tested planetary defense missions. For example, NASA’s DART mission in 2022 successfully altered the orbit of Dimorphos, a small asteroid moonlet. This proves that humanity can change an asteroid’s path if detected early enough.</p>
+      <p data-i18n="extra_p6">Computer models also estimate the effects on climate, agriculture, and ecosystems after a large impact. Dust and aerosols in the atmosphere could block sunlight for months, leading to what scientists call an “impact winter.”</p>
+      <p data-i18n="extra_p7">International cooperation is vital. No single nation can handle the threat of a large asteroid alone. That’s why the United Nations established the International Asteroid Warning Network (IAWN) to coordinate global response.</p>
+    </section>
 
-function initLanguage(){
-  const saved = localStorage.getItem('siteLang') || 'en';
-  setLanguage(saved);
-}
-langBtn.addEventListener('click', ()=>{
-  const current = localStorage.getItem('siteLang') || 'en';
-  setLanguage(current === 'en' ? 'ar' : 'en');
-});
+    <section class="card fade-in">
+      <h2 data-i18n="faq_title">FAQ (about this app)</h2>
+      <p><strong data-i18n="faq_q1">Is Impactor real?</strong><br><span data-i18n="faq_a1">Not here—this page uses “Impactor” as a teaching scenario to avoid mixing with real‑time news. For official updates, always consult reputable space‑agency pages.</span></p>
+      <p><strong data-i18n="faq_q2">How accurate is the mini‑game?</strong><br><span data-i18n="faq_a2">It’s a cartoon model. It scales blast/thermal distances with energy like (yield)^(1/3) and turns area × population into a rough casualty band. It ignores many real‑world details.</span></p>
+    </section>
 
-/* Theme toggle: nice animated knob */
-themeToggle.addEventListener('click', ()=>{
-  const isOn = themeToggle.getAttribute('data-on') === 'true';
-  themeToggle.setAttribute('data-on', isOn ? 'false' : 'true');
-  if(!isOn) { themeOn(); localStorage.setItem('siteTheme','light'); } else { themeOff(); localStorage.setItem('siteTheme','dark'); }
-  // redraw visualization so colors match
-  simulateImpact();
-});
-themeToggle.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') themeToggle.click(); });
+    <section class="card fade-in">
+      <p class="note" data-i18n="footer_note">Built for education. No real‑time hazard is implied.</p>
+    </section>
+  </main>
 
-function initTheme(){
-  const saved = localStorage.getItem('siteTheme') || 'dark';
-  if(saved === 'light'){ themeToggle.setAttribute('data-on','true'); themeOn(); } else { themeToggle.setAttribute('data-on','false'); themeOff(); }
-}
+  <script>
+    // ---- Translation strings (EN + AR) ----
+    const STR = {
+      en: {
+        hero_title: 'Impactor: a hypothetical near‑Earth asteroid scenario',
+        hero_sub: 'This mobile‑friendly page is a learning tool. It summarizes the imagined asteroid “Impactor” scenario and lets you try a safe, toy calculator that estimates rough damage from different asteroid sizes. It is not an official NASA page.',
+        chip_edu: 'Educational', chip_hypo: 'Hypothetical scenario', chip_mobile: 'Mobile‑first',
+        about_title: 'About “Impactor”',
+        about_p1: '“Impactor” here refers to a fictional near‑Earth object used for public outreach and practice. It is a placeholder name, not a real NASA‑designated asteroid. The purpose is to explain how asteroid risk is evaluated and what factors control potential damage.',
+        about_p2: 'In reality, professional surveys routinely find, track, and update orbits of asteroids. Most discovered objects pose no threat, and risk assessments are updated as more data arrives. This page avoids real‑time claims and sticks to a generic educational scenario.',
+        about_li1: 'Asteroid damage depends mostly on size (diameter), speed, density/composition, and entry angle.',
+        about_li2: 'Small objects usually break up in the atmosphere; larger, denser, or faster objects carry more energy and can reach the ground.',
+        about_li3: 'Even for energetic events, actual casualties depend on where it strikes and local population density.',
+        facts_title: 'Key facts (for our scenario)',
+        facts_li1: 'Type: Stony or iron (choose in the simulator)',
+        facts_li2: 'Speed: Typical 12–25 km/s at entry',
+        facts_li3: 'Angle: 30–60° common; shallow angles increase airburst chance',
+        facts_li4: 'Note: These are generic ranges for learning, not an active warning',
+        sim_title: 'Mini‑game: rough impact outcome estimator',
+        sim_note: 'This toy model uses very simplified physics (energy scaling similar to nuclear‑blast rules of thumb). It’s only for educational play—real assessments use detailed simulations.',
+        f_diameter: 'Asteroid diameter (meters)',
+        f_speed: 'Entry speed (km/s)',
+        f_density: 'Composition',
+        f_angle: 'Entry angle (degrees)',
+        f_pop: 'Population density (people/km²)',
+        f_surface: 'Surface',
+        comp_stony: 'Stony (~3000 kg/m³)',
+        comp_iron: 'Iron (~7800 kg/m³)',
+        comp_comet: 'Porous/icy (~1500 kg/m³)',
+        surface_land: 'Land',
+        surface_water: 'Water',
+        run_btn: 'Run estimation',
+        r_yield: 'Estimated energy',
+        r_severe: 'Severe damage radius (~5 psi)',
+        r_moderate: 'Moderate damage radius (~2 psi)',
+        r_thermal: 'Thermal/overpressure reach',
+        r_casualties: 'Very rough casualty estimate',
+        r_disclaimer: 'Disclaimer: Heuristic only. Geography, buildings, and emergency response matter a lot.',
+        prep_title: 'How risk is reduced',
+        prep_li1: 'Sky surveys track objects and refine their orbits with additional observations.',
+        prep_li2: 'Planetary defense exercises practice communication and decision‑making.',
+        prep_li3: 'If a future object truly threatened Earth, mitigation concepts include kinetic impactors and, with long lead times, other deflection options.',
+        learn_title: 'Learn more safely',
+        learn_p: 'When you read about asteroids online, check dates and sources. Risk numbers can change quickly as new observations narrow the uncertainty.',
+        extra_title: 'Extra Information',
+        extra_p1: 'Asteroids like Impactor help researchers model what might happen if a real threat were ever discovered. They calculate orbital paths, track uncertainties, and simulate different impact outcomes using high‑performance computers.',
+        extra_p2: 'The most critical parameters are size, speed, density, and angle of approach. Combined, these determine the amount of energy released during entry. For example, a 300‑meter iron asteroid at 20 km/s carries more destructive energy than the largest nuclear weapons ever made.',
+        extra_p3: 'Modern planetary defense relies on early detection. The sooner a hazardous object is discovered, the more options humanity has for gentle deflection, such as using kinetic impactors or gravity tractors. This is why telescopes like Pan‑STARRS and surveys like NASA’s NEO Surveyor are essential.',
+        extra_p4: 'Historical events like the Tunguska explosion (1908) and the Chelyabinsk airburst (2013) show how even relatively small asteroids can cause significant damage. These events motivate better monitoring and preparation worldwide.',
+        extra_p5: 'NASA and ESA have already tested planetary defense missions. For example, NASA’s DART mission in 2022 successfully altered the orbit of Dimorphos, a small asteroid moonlet. This proves that humanity can change an asteroid’s path if detected early enough.',
+        extra_p6: 'Computer models also estimate the effects on climate, agriculture, and ecosystems after a large impact. Dust and aerosols in the atmosphere could block sunlight for months, leading to what scientists call an “impact winter.”',
+        extra_p7: 'International cooperation is vital. No single nation can handle the threat of a large asteroid alone. That’s why the United Nations established the International Asteroid Warning Network (IAWN) to coordinate global response.',
+        faq_title: 'FAQ (about this app)',
+        faq_q1: 'Is Impactor real?',
+        faq_a1: 'Not here—this page uses “Impactor” as a teaching scenario to avoid mixing with real‑time news. For official updates, always consult reputable space‑agency pages.',
+        faq_q2: 'How accurate is the mini‑game?',
+        faq_a2: 'It’s a cartoon model. It scales blast/thermal distances with energy like (yield)^(1/3) and turns area × population into a rough casualty band. It ignores many real‑world details.',
+        footer_note: 'Built for education. No real‑time hazard is implied.',
+        conclusion: 'Conclusion',
+        conclusion_p: 'Asteroid impacts are rare, but they can be devastating. By learning through scenarios like Impactor, we gain insight into both the threats and the science that helps us prepare. Humanity’s safety depends on early detection, international cooperation, and continued study.'
+      },
+      ar: {
+        hero_title: 'إمباكتور: سيناريو افتراضي لكويكب قريب من الأرض',
+        hero_sub: 'هذه صفحة تعليمية مناسبة للهاتف. تلخّص سيناريو الكويكب المتخيَّل “إمباكتور” وتتيح لك تجربة حاسبة مبسّطة تقدّر الأضرار التقريبية لأحجام مختلفة من الكويكبات. هذه ليست صفحة رسمية لوكالة ناسا.',
+        chip_edu: 'تعليمي', chip_hypo: 'سيناريو افتراضي', chip_mobile: 'أولوية للهاتف',
+        about_title: 'عن “إمباكتور”',
+        about_p1: 'المقصود بـ “إمباكتور” هنا جرم قريب من الأرض متخيَّل، يُستخدم للتوعية والتدرّب. إنه اسم مؤقت وليس كويكبًا مُسمّى رسميًا من ناسا. الهدف هو شرح كيفية تقييم المخاطر والعوامل التي تتحكّم في الأضرار المحتملة.',
+        about_p2: 'في الواقع، تقوم المسوحات الاحترافية باكتشاف وتتبع وتحديث مدارات الكويكبات بشكل دوري. معظم الأجرام المكتشفة لا تشكّل تهديدًا، وتُحدَّث التقييمات مع وصول بيانات أدق. تتجنّب هذه الصفحة الادعاءات اللحظية وتلتزم بسيناريو تعليمي عام.',
+        about_li1: 'تعتمد أضرار الكويكب غالبًا على القطر والسرعة والكثافة/التركيب وزاوية الدخول.',
+        about_li2: 'الأجرام الصغيرة غالبًا ما تتفتّت في الغلاف الجوي؛ بينما الأجسام الأكبر أو الأشد كثافةً أو الأسرع تحمل طاقة أعلى وقد تصل إلى السطح.',
+        about_li3: 'حتى مع الأحداث العنيفة، تعتمد الخسائر البشرية على موقع السقوط وكثافة السكان.',
+        facts_title: 'حقائق أساسية (لسيناريونا)',
+        facts_li1: 'النوع: صخري أو حديدي (اختر في المحاكي)',
+        facts_li2: 'السرعة: عادة 12–25 كم/ث عند الدخول',
+        facts_li3: 'الزاوية: الشائع 30–60°؛ الزوايا المائلة تزيد فرصة الانفجار الهوائي',
+        facts_li4: 'ملاحظة: هذه نطاقات تعليمية عامة وليست تحذيرًا فعليًا',
+        sim_title: 'لعبة مصغّرة: مقدّر تقريبي لنتائج الاصطدام',
+        sim_note: 'يعتمد هذا النموذج المبسّط على قواعد تقريبية تشبه مقاييس طاقة الانفجارات النووية. للاستخدام التعليمي فقط—أما التقييمات الحقيقية فتستخدم محاكاة مفصّلة.',
+        f_diameter: 'قطر الكويكب (متر)',
+        f_speed: 'سرعة الدخول (كم/ث)',
+        f_density: 'التركيب',
+        f_angle: 'زاوية الدخول (درجة)',
+        f_pop: 'كثافة السكان (شخص/كم²)',
+        f_surface: 'السطح',
+        comp_stony: 'صخري (~3000 كغ/م³)',
+        comp_iron: 'حديدي (~7800 كغ/م³)',
+        comp_comet: 'مسامي/جليدي (~1500 كغ/م³)',
+        surface_land: 'يابسة',
+        surface_water: 'بحر/ماء',
+        run_btn: 'Run estimation',
+        r_yield: 'الطاقة التقريبية',
+        r_severe: 'نصف قطر الضرر الشديد (~5 psi)',
+        r_moderate: 'نصف قطر الضرر المتوسط (~2 psi)',
+        r_thermal: 'مدى التأثير الحراري/الضغط',
+        r_casualties: 'تقدير تقريبي جدًا للخسائر',
+        r_disclaimer: 'تنبيه: هذا تقريب فقط. الجغرافيا والمباني والاستجابة الطارئة عوامل حاسمة.',
+        prep_title: 'كيف نُقلّل المخاطر',
+        prep_li1: 'تتتبّع المسوحات الفلكية الأجرام وتُحسّن مداراتها مع الملاحظات المتكررة.',
+        prep_li2: 'تمارين الدفاع الكوكبي تُدرّب على الاتصال واتخاذ القرار.',
+        prep_li3: 'مع وجود تهديد حقيقي ووقت كافٍ، تشمل أفكار التخفيف الدفع الحركي وخيارات أخرى للانحراف.',
+        learn_title: 'تعلم بمأمن',
+        learn_p: 'عند قراءة أخبار الكويكبات، تحقّق من التاريخ والمصدر. قد تتغير الأرقام سريعًا مع تضييق عدم اليقين.',
+        extra_title: 'معلومات إضافية',
+        extra_p1: 'تساعد الكويكبات مثل إمباكتور الباحثين على وضع نماذج لما قد يحدث إذا تم اكتشاف تهديد حقيقي. يتم حساب المسارات المدارية، وتتبع حالات عدم اليقين، ومحاكاة نتائج الاصطدام المختلفة باستخدام الحواسيب عالية الأداء.',
+        extra_p2: 'أهم المعايير هي الحجم والسرعة والكثافة وزاوية الاقتراب. تحدد هذه العوامل مجتمعة كمية الطاقة المنبعثة أثناء الدخول. على سبيل المثال، كويكب حديدي بقطر 300 متر بسرعة 20 كم/ثانية يحمل طاقة تدميرية أكبر من أقوى الأسلحة النووية التي صنعها الإنسان.',
+        extra_p3: 'يعتمد الدفاع الكوكبي الحديث على الاكتشاف المبكر. كلما تم اكتشاف الجسم الخطير مبكرًا، زادت الخيارات المتاحة للبشر لتغييره بلطف، مثل استخدام المصادمات الحركية أو الجر الثقالي. لهذا السبب تعد التلسكوبات مثل بان‑ستارز والمسوح مثل تلسكوب مسح الأجسام القريبة من الأرض التابع لناسا ضرورية.',
+        extra_p4: 'تظهر الأحداث التاريخية مثل انفجار تونغوسكا (1908) وانفجار تشيليابينسك (2013) كيف يمكن حتى للكويكبات الصغيرة نسبيًا أن تسبب أضرارًا كبيرة. هذه الأحداث تحفز على مراقبة أفضل واستعداد عالمي.',
+        extra_p5: 'لقد اختبرت ناسا ووكالة الفضاء الأوروبية بالفعل مهام الدفاع الكوكبي. على سبيل المثال، نجحت مهمة دارت التابعة لناسا في عام 2022 في تغيير مدار القمر الصغير ديمورفوس. يثبت هذا أن البشرية يمكنها تغيير مسار كويكب إذا تم اكتشافه في وقت مبكر بما فيه الكفاية.',
+        extra_p6: 'تقدر النماذج الحاسوبية أيضًا التأثيرات على المناخ والزراعة والأنظمة البيئية بعد اصطدام كبير. يمكن أن يحجب الغبار والجسيمات الدقيقة أشعة الشمس لعدة أشهر، مما يؤدي إلى ما يسميه العلماء "شتاء الاصطدام".',
+        extra_p7: 'التعاون الدولي أمر بالغ الأهمية. لا يمكن لأي دولة بمفردها التعامل مع تهديد كويكب كبير. لهذا السبب أنشأت الأمم المتحدة الشبكة الدولية للإنذار بالكويكبات (IAWN) لتنسيق الاستجابة العالمية.',
+        faq_title: 'أسئلة شائعة (عن التطبيق)',
+        faq_q1: 'هل إمباكتور حقيقي؟',
+        faq_a1: 'ليس هنا—نستخدم “إمباكتور” كحالة تعليمية لتجنّب الخلط مع الأخبار المباشرة. للمستجدات الرسمية راجع مواقع وكالات الفضاء الموثوقة.',
+        faq_q2: 'ما مدى دقة اللعبة المصغّرة؟',
+        faq_a2: 'إنها نموذج كرتوني. يقيس المسافات مع الطاقة كـ (العائد)^(1/3) ويحوّل المساحة × السكان إلى نطاق تقريبي للخسائر. يتجاهل تفاصيل كثيرة.',
+        footer_note: 'للتعليم فقط. لا يُفهم منه وجود خطر فوري.',
+        conclusion: 'الخاتمة',
+        conclusion_p: 'تصادم الكويكبات نادر، لكنه قد يكون مدمرًا. من خلال التعلم عبر سيناريوهات مثل إمباكتور، نكتسب فهمًا لكل من التهديدات والعلم الذي يساعدنا على الاستعداد. تعتمد سلامة البشرية على الاكتشاف المبكر، والتعاون الدولي، والدراسة المستمرة.'
+      }
+    };
 
-/* -------------------------
-   Scroll animation: fade/slide
-   -> visible when > threshold, removed otherwise (so outgoing fades)
-   ------------------------- */
-const io = new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{
-    if(e.intersectionRatio > 0.12) e.target.classList.add('visible');
-    else e.target.classList.remove('visible');
-  });
-}, {threshold:[0,0.12,0.6]});
-document.querySelectorAll('.fade-slide').forEach(n=> io.observe(n));
+    // ---- Language handling ----
+    const langEN = document.getElementById('lang-en');
+    const langAR = document.getElementById('lang-ar');
+    function applyTranslations(code){
+      const dict = STR[code] || STR.en;
+      document.querySelectorAll('[data-i18n]').forEach(el=>{
+        const key = el.getAttribute('data-i18n');
+        if(dict[key]) el.textContent = dict[key];
+      });
+    }
+    function setLang(code){
+      document.documentElement.lang = code;
+      document.documentElement.dir = code === 'ar' ? 'rtl' : 'ltr';
+      langEN.classList.toggle('active', code==='en');
+      langAR.classList.toggle('active', code==='ar');
+      localStorage.setItem('lang', code);
+      applyTranslations(code);
+    }
+    langEN.addEventListener('click', ()=>setLang('en'));
+    langAR.addEventListener('click', ()=>setLang('ar'));
+    setLang(localStorage.getItem('lang')||'en');
 
-/* -------------------------
-   Mini-simulator logic (simple outreach-level approximations)
-   ------------------------- */
+    // ---- Theme persistence ----
+    const themeDarkBtn = document.getElementById('theme-dark');
+    const themeLightBtn = document.getElementById('theme-light');
+    function setTheme(mode){
+      document.body.setAttribute('data-theme', mode);
+      localStorage.setItem('theme', mode);
+      themeDarkBtn.classList.toggle('active', mode==='dark');
+      themeLightBtn.classList.toggle('active', mode==='light');
+    }
+    themeDarkBtn.addEventListener('click', ()=>setTheme('dark'));
+    themeLightBtn.addEventListener('click', ()=>setTheme('light'));
+    setTheme(localStorage.getItem('theme')||'dark');
 
-// input elements
-const dia = document.getElementById('dia');
-const diaNum = document.getElementById('diaNum');
-const vel = document.getElementById('vel');
-const velNum = document.getElementById('velNum');
-const angle = document.getElementById('angle');
-const angleNum = document.getElementById('angleNum');
-const target = document.getElementById('target');
-const pop = document.getElementById('pop');
+    // ---- Mini‑game calculator ----
+    function formatNumber(n){ return Intl.NumberFormat(undefined, {maximumFractionDigits: 2}).format(n); }
+    function estimate(){
+      const d = Math.max(1, +document.getElementById('diameter').value || 0); // m
+      const v = Math.max(1, +document.getElementById('speed').value || 0) * 1000; // m/s
+      const rho = Math.max(100, +document.getElementById('density').value || 3000); // kg/m3
+      const angle = Math.max(10, Math.min(90, +document.getElementById('angle').value || 45));
+      const pop = Math.max(0, +document.getElementById('pop').value || 0); // people/km2
+      const surface = document.getElementById('surface').value;
 
-dia.addEventListener('input', ()=> diaNum.value = dia.value);
-diaNum.addEventListener('input', ()=> dia.value = diaNum.value);
-vel.addEventListener('input', ()=> velNum.value = vel.value);
-velNum.addEventListener('input', ()=> vel.value = velNum.value);
-angle.addEventListener('input', ()=> angleNum.value = angle.value);
-angleNum.addEventListener('input', ()=> angle.value = angleNum.value);
+      const r = d/2; // m
+      const volume = (4/3) * Math.PI * r*r*r; // m3
+      let mass = volume * rho; // kg
 
-// results elements
-const energyEl = document.getElementById('energy');
-const craterEl = document.getElementById('crater');
-const levelEl = document.getElementById('level');
-const effectsEl = document.getElementById('effects');
-const exposedEl = document.getElementById('exposed');
+      // crude atmospheric loss factor: shallow angle/low density lose more energy before reaching ground
+      const angleFactor = Math.sin(angle * Math.PI/180); // 0..1
+      const densityFactor = Math.min(1, rho/3000); // porous <1, stony~1, iron>1 -> clamp
+      const coupling = 0.5 + 0.5*angleFactor * (0.6 + 0.4*Math.min(1, densityFactor)); // 0.5..1
 
-document.getElementById('run').addEventListener('click', simulateImpact);
+      const kinetic = 0.5 * mass * v*v * coupling; // J (very rough)
+      const TNT_J = 4.184e9; // J per ton TNT
+      const Y_ton = kinetic / TNT_J; // tons TNT
+      const Y_Mt = Y_ton / 1e6; // megatons
 
-// canvas
-const canvas = document.getElementById('vis');
-const ctx = canvas.getContext('2d');
+      // blast scaling ~ Y^(1/3). Use nuclear analogs as a cartoon proxy.
+      const severe_km = 4.7 * Math.cbrt(Math.max(Y_Mt, 1e-9)); // ~5 psi
+      const moderate_km = 7.5 * Math.cbrt(Math.max(Y_Mt, 1e-9)); // ~2 psi
+      const thermal_km = 12.5 * Math.cbrt(Math.max(Y_Mt, 1e-9)); // radiant/overpressure reach
 
-function simulateImpact(){
-  // read inputs
-  const D_km = parseFloat(dia.value) || 0;
-  const v_kms = parseFloat(vel.value) || 0;
-  const ang_deg = parseFloat(angle.value) || 45;
-  const tgt = target.value;
-  const popDensity = parseFloat(pop.value) || 0;
+      // casualties from area × density × severity factors (very rough)
+      const areaSev = Math.PI * severe_km*severe_km; // km2
+      const areaMod = Math.PI * (Math.max(0, moderate_km*moderate_km - severe_km*severe_km));
+      const areaTherm = Math.PI * (Math.max(0, thermal_km*thermal_km - moderate_km*moderate_km));
+      const fatalSev = 0.5; // 50%
+      const fatalMod = 0.2; // 20%
+      const fatalTherm = surface==='water' ? 0.01 : 0.05; // much lower over water
+      const casualties = pop * (areaSev*fatalSev + areaMod*fatalMod + areaTherm*fatalTherm);
 
-  // conversions & simple physics
-  const D_m = D_km * 1000.0;                         // diameter in meters
-  const r = D_m / 2.0;
-  const density = 3000;                             // kg/m3 typical stony asteroid (simplified)
-  const volume = (4/3) * Math.PI * Math.pow(r,3);   // m3
-  const mass = volume * density;                    // kg
+      // update UI
+      document.getElementById('outYield').textContent = `${formatNumber(Y_Mt)} Mt TNT`;
+      document.getElementById('outSevere').textContent = `${formatNumber(severe_km)} km`;
+      document.getElementById('outModerate').textContent = `${formatNumber(moderate_km)} km`;
+      document.getElementById('outThermal').textContent = `${formatNumber(thermal_km)} km`;
+      document.getElementById('outCasualties').textContent = `${formatNumber(casualties)} people`;
 
-  const v = v_kms * 1000.0;                         // m/s
-  const E = 0.5 * mass * v * v;                     // Joules
-  const E_Mt = E / 4.184e15;                        // megatons of TNT
+      document.getElementById('result').hidden = false;
+    }
+    document.getElementById('run').addEventListener('click', estimate);
 
-  // simplified crater estimate (outreach scaling, not exact): crater diameter scales sublinearly with D and v
-  // use a conservative outreach formula: crater_m ≈ k * D_m^0.8 * (v_kms)^0.4; choose k for reasonable numbers
-  const crater_m = Math.max(5, 0.6 * Math.pow(D_m,0.8) * Math.pow(Math.max(v_kms,1),0.4));
-
-  // blast radii (severe and moderate) — order-of-magnitude scaling
-  const blast_severe_m = Math.max(30, 150 * Math.pow(Math.max(E_Mt, 0.0001), 0.33));
-  const blast_moderate_m = blast_severe_m * 2.5;
-
-  // thermal ignition radius (approx)
-  const thermal_m = Math.max(20, 120 * Math.pow(Math.max(E_Mt, 0.0001), 0.25));
-
-  // classify damage level (simple thresholds in meters / energy / diameter)
-  let damageLevel = 'Local';
-  if(D_km >= 1.0 || E_Mt > 100) damageLevel = 'Global';
-  else if(D_km >= 0.2 || E_Mt > 1) damageLevel = 'Regional';
-  else if(D_km >= 0.05 || E_Mt > 0.01) damageLevel = 'Local-Regional';
-
-  // additional effects
-  let effects = [];
-  if(tgt === 'sea' && D_km >= 0.05) effects.push((document.documentElement.lang==='ar') ? 'تسونامي محتمل' : 'Potential tsunami');
-  if(thermal_m > 80) effects.push((document.documentElement.lang==='ar') ? 'احتمال حرائق واسعة النطاق' : 'Widespread fires possible');
-  if(blast_severe_m > 2000) effects.push((document.documentElement.lang==='ar') ? 'موجة انفجار على نطاق واسع' : 'Very large blast wave');
-
-  if(effects.length===0) effects.push((document.documentElement.lang==='ar') ? 'تأثيرات محلية متوقعة' : 'Local effects expected');
-
-  // people exposed (approx) - area of severe blast * pop density
-  const area_km2 = Math.PI * Math.pow(blast_severe_m,2) / 1e6;
-  const exposed = Math.round(area_km2 * popDensity);
-
-  // update UI
-  energyEl.textContent = `${E_Mt.toFixed(2)} Mt TNT`;
-  craterEl.textContent = `${Math.round(crater_m)} m`;
-  levelEl.textContent = (document.documentElement.lang==='ar') ? damageLevel.replace('Local-Regional','محلي-إقليمي').replace('Local','محلي').replace('Regional','إقليمي').replace('Global','عالمي') : damageLevel;
-  effectsEl.textContent = effects.join(' · ');
-  exposedEl.textContent = exposed.toLocaleString();
-
-  drawVisualization(crater_m, blast_severe_m, blast_moderate_m, thermal_m, tgt);
-}
-
-// simple canvas draw (schematic)
-function drawVisualization(crater, blastSevere, blastModerate, thermal, targetType){
-  const DPR = window.devicePixelRatio || 1;
-  canvas.width = canvas.clientWidth * DPR;
-  canvas.height = canvas.clientHeight * DPR;
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-  ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);
-  const W = canvas.clientWidth, H = canvas.clientHeight;
-  // background based on theme
-  const isLight = document.body.classList.contains('light');
-  ctx.fillStyle = isLight ? '#f6f9fc' : '#071018';
-  ctx.fillRect(0,0,W,H);
-
-  // scale radii to canvas (largest radius -> 40% min(W,H))
-  const maxR = Math.max(1, blastModerate, thermal, crater);
-  const scale = (Math.min(W,H) * 0.38) / maxR;
-  const cx = W/2, cy = H/2;
-
-  // draw sea/land stripe
-  ctx.fillStyle = targetType==='sea' ? (isLight ? 'rgba(0,90,140,0.12)' : 'rgba(0,60,120,0.2)') : (isLight ? 'rgba(20,120,40,0.06)' : 'rgba(20,60,20,0.08)');
-  ctx.fillRect(0,H-50,W,50);
-
-  function drawCircle(rMeters, color, label){
-    const rpx = rMeters * scale;
-    ctx.beginPath(); ctx.arc(cx,cy,rpx,0,Math.PI*2); ctx.fillStyle = color; ctx.fill();
-    ctx.lineWidth = 2; ctx.strokeStyle = color; ctx.stroke();
-    ctx.fillStyle = isLight ? '#000' : '#fff'; ctx.font = '12px system-ui';
-    ctx.fillText(label, Math.min(W-120, cx + rpx + 6), Math.max(14, cy));
-  }
-
-  drawCircle(blastModerate, 'rgba(255,160,60,0.12)', (document.documentElement.lang==='ar'?'انفجار متوسط':'Moderate blast'));
-  drawCircle(blastSevere, 'rgba(255,80,30,0.20)', (document.documentElement.lang==='ar'?'انفجار شديد':'Severe blast'));
-  drawCircle(thermal, 'rgba(255,200,60,0.08)', (document.documentElement.lang==='ar'?'خطر حراري':'Thermal risk'));
-  drawCircle(crater, 'rgba(80,80,80,0.5)', (document.documentElement.lang==='ar'?'فوهة':'Crater'));
-
-  // impact marker
-  ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill();
-  ctx.fillStyle = isLight ? '#000' : '#fff'; ctx.fillText((document.documentElement.lang==='ar'?'نقطة الاصطدام':'Impact'), cx+8, cy+4);
-}
-
-/* run default simulation so UI isn't empty */
-initTheme();
-initLanguage();
-simulateImpact();
-
-/* keyboard shortcuts */
-document.addEventListener('keydown', e=>{
-  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='l'){ e.preventDefault(); langBtn.click(); }
-  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='t'){ e.preventDefault(); themeToggle.click(); }
-});
-</script>
+    // ---- Scroll animations ----
+    const faders = document.querySelectorAll('.fade-in');
+    const observer = new IntersectionObserver(entries => { entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); observer.unobserve(e.target); } }); }, {threshold: 0.15});
+    faders.forEach(el=>observer.observe(el));
+  </script>
 </body>
 </html>
