@@ -1,20 +1,3 @@
-<!--
-Asteroid Defense Game - Single-file HTML (ready for GitHub)
-
-How to use:
-1. Save this file as `index.html` in a new GitHub repository (or github pages branch).
-2. Open `index.html` in a browser to play. No build step required.
-
-Features:
-- Choose a historical asteroid event or enter custom asteroid parameters.
-- Choose a mitigation strategy: Deflect, Fragment, Evacuate.
-- Animated asteroid flight and explosion with results and scoring.
-- Simplified physics model for educational play; not for real hazard assessment.
-
-Credits:
-- This is a standalone educational game. Replace or extend data/graphics as desired.
--->
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -22,308 +5,157 @@ Credits:
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Asteroid Defense Game</title>
   <style>
-    :root{--bg:#071024;--card:#0f1724;--accent:#38bdf8;--danger:#fb7185;--muted:#94a3b8}
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
-    body{background:linear-gradient(180deg,#04121e 0%,var(--bg) 60%);color:#e6eef8;display:flex;align-items:center;justify-content:center;padding:24px}
+    :root{
+      --bg:#071024;--card:#0f1724;--accent:#38bdf8;--danger:#fb7185;--muted:#94a3b8;--text:#e6eef8;
+    }
+    [data-theme="light"] {
+      --bg:#f3f4f6;--card:#ffffff;--accent:#2563eb;--danger:#dc2626;--muted:#6b7280;--text:#111827;
+    }
+    body{background:var(--bg);color:var(--text);margin:0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;padding:16px}
     .app{width:100%;max-width:1000px}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-    h1{font-size:20px;margin:0}
-    .container{display:grid;grid-template-columns:360px 1fr;gap:16px}
-    .panel{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border:1px solid rgba(255,255,255,0.04);padding:14px;border-radius:12px}
-    .list{max-height:360px;overflow:auto;margin-top:8px}
-    .neo{padding:8px;border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,0.015);cursor:pointer;border:1px solid transparent}
-    .neo:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(0,0,0,0.6)}
-    .neo.selected{border-color:rgba(56,189,248,0.18);box-shadow:0 0 0 3px rgba(56,189,248,0.06)}
-    label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
-    input[type=number],select,input[type=text]{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-    .row{display:flex;gap:8px}
-    button{cursor:pointer;padding:8px 12px;border-radius:10px;border:0;background:var(--accent);color:#04202b;font-weight:600}
-    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit}
-    .play-area{height:520px;display:flex;flex-direction:column}
-    .sky{flex:1;position:relative;border-radius:8px;overflow:hidden;background:radial-gradient(ellipse at 20% 0%, rgba(255,255,255,0.02), transparent 10%), linear-gradient(180deg,#062033 0%, #041024 100%)}
-    .ground{height:120px;background:linear-gradient(180deg,#05202b,#02161a);display:flex;align-items:center;justify-content:center;flex-direction:column}
-    .hud{position:absolute;left:12px;top:12px;background:rgba(1,6,12,0.45);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)}
-    .asteroid{position:absolute;left:calc(50% - 20px);top:-80px;width:40px;height:40px;border-radius:50%;background:conic-gradient(#8b5e34,#6b3f1d);box-shadow:0 8px 24px rgba(0,0,0,0.6)}
-    .trail{position:absolute;left:calc(50% - 6px);top:0;width:12px;height:200px;border-radius:6px;filter:blur(10px);opacity:0.8}
-    .explosion{position:absolute;width:220px;height:220px;border-radius:50%;pointer-events:none;mix-blend-mode:screen}
-    .panel-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-    .results{padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);margin-top:10px}
-    .score{font-size:28px;font-weight:700;color:var(--accent)}
-    .small{font-size:12px;color:var(--muted)}
-    /* simple responsive */
-    @media (max-width:980px){.container{grid-template-columns:1fr}.play-area{height:640px}.neo{font-size:14px}}
+    .panel{background:var(--card);padding:14px;border-radius:12px;margin-bottom:12px}
+    button{cursor:pointer;padding:8px 12px;border-radius:10px;border:0;margin:4px;font-weight:600}
+    button.primary{background:var(--accent);color:white}
+    button.ghost{background:transparent;border:1px solid var(--muted);color:var(--text)}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    .small{font-size:13px;color:var(--muted)}
+    .score{font-size:24px;font-weight:bold;color:var(--accent)}
   </style>
 </head>
-<body>
+<body data-theme="dark">
   <div class="app">
-    <header>
-      <h1>Asteroid Defense — HTML Game (single file)</h1>
-      <div class="small">Save cities — try strategies — publish to GitHub</div>
+    <header class="panel">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h1 id="title">🌍 Asteroid Defense Game</h1>
+        <div class="row">
+          <button id="themeBtn" class="ghost">🌙</button>
+          <button id="langBtn" class="ghost">EN</button>
+        </div>
+      </div>
     </header>
 
-    <div class="container">
-      <div class="panel">
-        <strong>Choose event or create custom</strong>
-        <div class="small" style="margin-top:6px">Pick a historical impact or enter asteroid parameters and population density.</div>
-
-        <div style="margin-top:10px">
-          <select id="presetSelect">
-            <option value="chelyabinsk">Chelyabinsk (2013) — airburst over Russia</option>
-            <option value="tunguska">Tunguska (1908) — large blast in Siberia</option>
-            <option value="chicxulub">Chicxulub (66Mya) — mass-extinction scale</option>
-            <option value="custom">Custom asteroid...</option>
-          </select>
-        </div>
-
-        <div class="list" id="presetList" style="margin-top:10px">
-          <!-- presets will render here -->
-        </div>
-
-        <div style="margin-top:8px">
-          <label>Diameter (m)</label>
-          <input type="number" id="diameter" value="100" min="1" />
-
-          <label>Velocity (km/s)</label>
-          <input type="number" id="velocity" value="20" step="1" min="1" />
-
-          <label>Density (kg/m³)</label>
-          <input type="number" id="density" value="3000" step="10" min="100" />
-
-          <label>Population density (people / km²)</label>
-          <input type="number" id="pop" value="1000" step="10" min="0" />
-
-          <label style="margin-top:8px">Strategy</label>
-          <div class="row" style="margin-top:6px">
-            <button id="deflect">🚀 Deflect</button>
-            <button id="fragment">💥 Fragment</button>
-            <button id="evacuate">🏃 Evacuate</button>
-            <button id="auto" class="ghost">🔁 Auto-run</button>
-          </div>
-
-          <div class="panel-footer">
-            <button id="launch">Launch Simulation</button>
-            <button id="reset" class="ghost">Reset</button>
-          </div>
-        </div>
-
-        <div class="small" style="margin-top:10px">Export: Save this file to GitHub as <code>index.html</code>. No server required.</div>
+    <div class="panel">
+      <div class="row">
+        <button id="customBtn" class="primary">🌌 Create Your Own</button>
+        <button id="historyBtn" class="ghost">☄️ Historical Impacts</button>
       </div>
-
-      <div class="play-area">
-        <div class="panel sky" id="sky">
-          <div class="hud" id="hud">Status: idle</div>
-
-          <div id="asteroid" class="asteroid" style="display:none"></div>
-          <canvas id="trail" class="trail" style="display:none"></canvas>
-          <div id="explosion" class="explosion" style="display:none"></div>
-
-          <div style="position:absolute;right:12px;top:12px;text-align:right;color:var(--muted);font-size:13px">
-            <div id="energyText">Energy: —</div>
-            <div id="blastText">Blast radius: —</div>
-            <div id="casualtiesText">Casualties: —</div>
-          </div>
-        </div>
-
-        <div class="ground panel">
-          <div style="width:100%;display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div class="small">Result</div>
-              <div id="resultSummary">No run yet</div>
-            </div>
-            <div style="text-align:right">
-              <div class="small">Score</div>
-              <div class="score" id="score">—</div>
-            </div>
-          </div>
-
-          <div class="results" id="resultsBox" style="display:none"></div>
-        </div>
+      <div id="customInputs">
+        <label id="diamLabel">Diameter (m)</label>
+        <input type="number" id="diameter" value="100">
+        <label id="velLabel">Velocity (km/s)</label>
+        <input type="number" id="velocity" value="20">
+        <label id="denLabel">Density (kg/m³)</label>
+        <input type="number" id="density" value="3000">
+        <label id="popLabel">Population density (/km²)</label>
+        <input type="number" id="pop" value="1000">
       </div>
+      <div id="historyList" style="display:none">
+        <button data-preset="chelyabinsk">Chelyabinsk 2013</button>
+        <button data-preset="tunguska">Tunguska 1908</button>
+        <button data-preset="chicxulub">Chicxulub 66Mya</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="row">
+        <button id="deflect">🚀 Deflect</button>
+        <button id="fragment">💥 Fragment</button>
+        <button id="evacuate">🏃 Evacuate</button>
+      </div>
+      <button id="launch" class="primary">▶️ Simulate</button>
+    </div>
+
+    <div class="panel">
+      <div id="results">No run yet</div>
+      <div class="score" id="score">—</div>
     </div>
   </div>
 
-
 <script>
-// Simple physics & helpers (educational approximations)
-function kineticEnergyJ(diameter_m, density_kgm3, velocity_ms) {
-  const r = diameter_m / 2;
-  const volume = (4/3) * Math.PI * r*r*r;
-  const mass = volume * density_kgm3;
-  return 0.5 * mass * velocity_ms*velocity_ms;
-}
-function joulesToMegatons(j) { return j / 4.184e15; }
-function blastRadiusMeters(E) { const k = 60; return k * Math.pow(E / 1e12, 1/3); }
-function estimateCasualties(blastR_m, popDensity) { const area_km2 = Math.PI * Math.pow(blastR_m/1000,2); return Math.round(area_km2 * popDensity * 0.02); }
-
-// Preset events
 const PRESETS = {
-  chelyabinsk: {label:'Chelyabinsk (2013)', diameter:20, velocity:19, density:3000, pop:4000, note:'Airburst over Chelyabinsk, Russia.'},
-  tunguska: {label:'Tunguska (1908)', diameter:60, velocity:15, density:2700, pop:1, note:'Large airburst flattened forest in Siberia.'},
-  chicxulub: {label:'Chicxulub (66Mya)', diameter:10000, velocity:20, density:3000, pop:0, note:'Mass-extinction scale impact (historic).'},
+  chelyabinsk:{diameter:20,velocity:19,density:3000,pop:4000},
+  tunguska:{diameter:60,velocity:15,density:2700,pop:1},
+  chicxulub:{diameter:10000,velocity:20,density:3000,pop:0}
 };
+let chosenStrategy=null;
+let lang="en";
 
-// UI refs
-const presetSelect = document.getElementById('presetSelect');
-const diameterEl = document.getElementById('diameter');
-const velocityEl = document.getElementById('velocity');
-const densityEl = document.getElementById('density');
-const popEl = document.getElementById('pop');
-const launchBtn = document.getElementById('launch');
-const resetBtn = document.getElementById('reset');
-const deflectBtn = document.getElementById('deflect');
-const fragmentBtn = document.getElementById('fragment');
-const evacuateBtn = document.getElementById('evacuate');
-const autoBtn = document.getElementById('auto');
-const sky = document.getElementById('sky');
-const asteroidEl = document.getElementById('asteroid');
-const trailCanvas = document.getElementById('trail');
-const explosionEl = document.getElementById('explosion');
-const hud = document.getElementById('hud');
-const energyText = document.getElementById('energyText');
-const blastText = document.getElementById('blastText');
-const casualtiesText = document.getElementById('casualtiesText');
-const resultSummary = document.getElementById('resultSummary');
-const scoreEl = document.getElementById('score');
-const resultsBox = document.getElementById('resultsBox');
+// Physics
+function kineticEnergyJ(d,dens,v){const r=d/2,vol=4/3*Math.PI*r**3,m=vol*dens;return 0.5*m*v*v;}
+function joulesToMt(j){return j/4.184e15;}
+function blastR(E){return 60*Math.pow(E/1e12,1/3);}
+function casualties(R,pop){return Math.round(Math.PI*(R/1000)**2*pop*0.02);}
 
-let chosenStrategy = null;
-let autoRun = false;
-
-// draw presets list
-function renderPresetList(){
-  const list = document.getElementById('presetList');
-  list.innerHTML = '';
-  Object.keys(PRESETS).forEach(k=>{
-    const p = PRESETS[k];
-    const div = document.createElement('div');
-    div.className='neo'; div.innerHTML = `<div style="font-weight:600">${p.label}</div><div class="small">${p.note}</div>`;
-    div.addEventListener('click',()=>{ presetSelect.value=k; applyPreset(k); document.querySelectorAll('.neo').forEach(n=>n.classList.remove('selected')); div.classList.add('selected'); });
-    list.appendChild(div);
-  });
-}
-renderPresetList();
-
-function applyPreset(key){
-  const p = PRESETS[key];
-  diameterEl.value = p.diameter;
-  velocityEl.value = p.velocity;
-  densityEl.value = p.density;
-  popEl.value = p.pop;
+// Simulation
+function runSim(){
+  const d=+document.getElementById("diameter").value;
+  const v=+document.getElementById("velocity").value*1000;
+  const dens=+document.getElementById("density").value;
+  const pop=+document.getElementById("pop").value;
+  if(!chosenStrategy){alert("Choose strategy first");return;}
+  const E=kineticEnergyJ(d,dens,v);
+  const mt=joulesToMt(E);
+  const R=blastR(E);
+  const cas=casualties(R,pop);
+  let prevented=0;
+  if(chosenStrategy==="deflect") prevented=cas*0.7;
+  if(chosenStrategy==="fragment") prevented=cas*0.5;
+  if(chosenStrategy==="evacuate") prevented=cas*0.4;
+  const score=Math.round(prevented/(cas+1)*100);
+  document.getElementById("results").innerText=
+    (lang==="en"?
+     `Energy: ${mt.toFixed(2)} Mt, Blast radius: ${Math.round(R)} m, Casualties: ${cas}, Prevented: ${Math.round(prevented)}`:
+     `الطاقة: ${mt.toFixed(2)} ميغاطن، نصف قطر الانفجار: ${Math.round(R)} م، الضحايا: ${cas}، المُنقَذون: ${Math.round(prevented)}`);
+  document.getElementById("score").innerText=score+"%";
 }
 
-presetSelect.addEventListener('change',()=>{
-  const val = presetSelect.value;
-  if(val==='custom') return;
-  applyPreset(val);
+// Buttons
+document.getElementById("deflect").onclick=()=>chosenStrategy="deflect";
+document.getElementById("fragment").onclick=()=>chosenStrategy="fragment";
+document.getElementById("evacuate").onclick=()=>chosenStrategy="evacuate";
+document.getElementById("launch").onclick=runSim;
+
+document.getElementById("customBtn").onclick=()=>{
+  document.getElementById("customInputs").style.display="block";
+  document.getElementById("historyList").style.display="none";
+};
+document.getElementById("historyBtn").onclick=()=>{
+  document.getElementById("customInputs").style.display="none";
+  document.getElementById("historyList").style.display="block";
+};
+document.querySelectorAll("#historyList button").forEach(btn=>{
+  btn.onclick=()=>{
+    const p=PRESETS[btn.dataset.preset];
+    diameter.value=p.diameter;velocity.value=p.velocity;density.value=p.density;pop.value=p.pop;
+  };
 });
 
-// Strategy buttons
-[deflectBtn, fragmentBtn, evacuateBtn].forEach(btn=>btn.addEventListener('click',()=>{
-  chosenStrategy = btn.id;
-  [deflectBtn,fragmentBtn,evacuateBtn].forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
-}));
+// Theme toggle
+document.getElementById("themeBtn").onclick=()=>{
+  const body=document.body;
+  body.dataset.theme=body.dataset.theme==="light"?"dark":"light";
+};
 
-autoBtn.addEventListener('click',()=>{ autoRun = !autoRun; autoBtn.classList.toggle('ghost',!autoRun); autoBtn.textContent = autoRun? '🔁 Auto-run (on)':'🔁 Auto-run'; });
-
-// Canvas trail
-trailCanvas.width = 12; trailCanvas.height = 600; const tctx = trailCanvas.getContext('2d');
-function drawTrail(intensity){ tctx.clearRect(0,0,trailCanvas.width,trailCanvas.height); const g=tctx.createLinearGradient(6,0,6,trailCanvas.height); g.addColorStop(0,'rgba(255,200,80,'+intensity+')'); g.addColorStop(1,'rgba(255,120,20,0)'); tctx.fillStyle=g; tctx.fillRect(0,0,12,trailCanvas.height); }
-
-// Animation helpers
-function animateAsteroid({duration=2200, onImpact}){
-  asteroidEl.style.display='block'; trailCanvas.style.display='block'; drawTrail(0.9);
-  const start = performance.now();
-  const startTop = -80; const endTop = sky.clientHeight - 180; // before ground
-  function step(now){
-    const t = Math.min(1,(now-start)/duration);
-    const ease = 1 - Math.pow(1-t,3);
-    const top = startTop + (endTop - startTop)*ease;
-    const leftOffset = Math.sin(t*3.14*2)*80; // sway
-    asteroidEl.style.top = top + 'px'; asteroidEl.style.left = `calc(50% + ${leftOffset}px)`;
-    trailCanvas.style.top = (top+20) + 'px'; trailCanvas.style.left = `calc(50% + ${leftOffset-6}px)`;
-    drawTrail(0.9*(1-t));
-    if(t<1) requestAnimationFrame(step); else { asteroidEl.style.display='none'; trailCanvas.style.display='none'; if(onImpact) onImpact(); }
+// Language toggle
+document.getElementById("langBtn").onclick=()=>{
+  lang=lang==="en"?"ar":"en";
+  document.getElementById("langBtn").innerText=lang.toUpperCase();
+  if(lang==="ar"){
+    document.getElementById("title").innerText="🌍 لعبة الدفاع عن الأرض";
+    diamLabel.innerText="القطر (م)";
+    velLabel.innerText="السرعة (كم/ث)";
+    denLabel.innerText="الكثافة (كغ/م³)";
+    popLabel.innerText="الكثافة السكانية (/كم²)";
+    document.getElementById("launch").innerText="▶️ محاكاة";
+  }else{
+    document.getElementById("title").innerText="🌍 Asteroid Defense Game";
+    diamLabel.innerText="Diameter (m)";
+    velLabel.innerText="Velocity (km/s)";
+    denLabel.innerText="Density (kg/m³)";
+    popLabel.innerText="Population density (/km²)";
+    document.getElementById("launch").innerText="▶️ Simulate";
   }
-  requestAnimationFrame(step);
-}
-
-function showExplosion(intensity, color='#ffb86b'){
-  explosionEl.style.display='block'; explosionEl.style.left = 'calc(50% - 110px)'; explosionEl.style.top = (sky.clientHeight - 260) + 'px';
-  explosionEl.innerHTML = '';
-  const max = Math.min(220, Math.round(80 + intensity/1000));
-  explosionEl.style.width = max+'px'; explosionEl.style.height = max+'px';
-  explosionEl.style.boxShadow = `0 0 ${Math.round(max/2)}px ${color}`;
-  explosionEl.style.background = `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), ${color} 30%, transparent 60%)`;
-  explosionEl.style.opacity = '1';
-  setTimeout(()=>{ explosionEl.style.transition='opacity 900ms'; explosionEl.style.opacity='0'; setTimeout(()=>{ explosionEl.style.display='none'; explosionEl.style.transition=''; },900); },900);
-}
-
-function formatNumber(n){ return n>=1000? n.toLocaleString(): String(n); }
-
-// Simulation core
-function runSimulation(auto=false){
-  const diameter = Math.max(0.1, Number(diameterEl.value));
-  const velocity = Math.max(0.1, Number(velocityEl.value));
-  const density = Math.max(10, Number(densityEl.value));
-  const pop = Math.max(0, Number(popEl.value));
-  if(!chosenStrategy){ alert('Choose a strategy first (Deflect / Fragment / Evacuate)'); return; }
-
-  hud.textContent = 'Simulating...';
-  // compute
-  const E = kineticEnergyJ(diameter, density, velocity*1000);
-  const megatons = joulesToMegatons(E);
-  const blastR = blastRadiusMeters(E);
-  const casualties = estimateCasualties(blastR, pop);
-
-  // mitigation effects approximations
-  let prevented = 0;
-  if(chosenStrategy==='deflect'){ prevented = Math.round(casualties * 0.75); }
-  if(chosenStrategy==='fragment'){ prevented = Math.round(casualties * 0.55); }
-  if(chosenStrategy==='evacuate'){ prevented = Math.round(casualties * 0.5); }
-
-  // animate asteroid then explosion
-  animateAsteroid({duration: 2200, onImpact: ()=>{
-    showExplosion(Math.min(1000, E/1e12));
-    // results update
-    energyText.textContent = 'Energy: '+megatons.toFixed(2)+' Mt TNT';
-    blastText.textContent = 'Blast radius: '+Math.round(blastR)+' m';
-    casualtiesText.textContent = 'Casualties: '+formatNumber(casualties);
-
-    // score calculation
-    const scorePct = Math.max(0, Math.round((prevented/(casualties+1))*100));
-    resultSummary.textContent = `${prevented} casualties prevented out of ${casualties} (${scorePct}% saved)`;
-    scoreEl.textContent = scorePct + '%';
-
-    resultsBox.style.display = 'block';
-    resultsBox.innerHTML = `<strong>Details:</strong><br>Diameter: ${diameter} m • Velocity: ${velocity} km/s • Density: ${density} kg/m³<br>Population density: ${pop} /km²<br><br><strong>Strategy:</strong> ${chosenStrategy}<br><br><strong>Energy</strong>: ${megatons.toFixed(3)} Mt TNT<br><strong>Blast radius</strong>: ${Math.round(blastR)} m<br><strong>Casualties (no action)</strong>: ${formatNumber(casualties)}<br><strong>Casualties prevented</strong>: ${formatNumber(prevented)}`;
-
-    hud.textContent = 'Simulation complete';
-
-    // if auto-run, randomize a small asteroid and run again up to 3 times
-    if(autoRun && auto) setTimeout(()=>{ randomScenarioAndRun(); }, 1200);
-  }});
-}
-
-function randomScenarioAndRun(){
-  diameterEl.value = (10 + Math.round(Math.random()*400));
-  velocityEl.value = (10 + Math.round(Math.random()*30));
-  densityEl.value = [1500,2500,3000][Math.floor(Math.random()*3)];
-  popEl.value = [50,300,1000,5000][Math.floor(Math.random()*4)];
-  // pick random strategy
-  const strategies = [deflectBtn,fragmentBtn,evacuateBtn];
-  const chosen = strategies[Math.floor(Math.random()*strategies.length)]; chosen.click();
-  runSimulation(true);
-}
-
-launchBtn.addEventListener('click',()=> runSimulation(true));
-resetBtn.addEventListener('click',()=>{ hud.textContent='Status: idle'; energyText.textContent='Energy: —'; blastText.textContent='Blast radius: —'; casualtiesText.textContent='Casualties: —'; resultSummary.textContent='No run yet'; scoreEl.textContent='—'; resultsBox.style.display='none'; chosenStrategy=null; [deflectBtn,fragmentBtn,evacuateBtn].forEach(b=>b.classList.remove('selected')); });
-
-// accessibility: allow keyboard to start
-window.addEventListener('keydown',(e)=>{ if(e.key===' '){ e.preventDefault(); runSimulation(true); } });
-
-// initial preset
-applyPreset('chelyabinsk');
+};
 </script>
 </body>
 </html>
