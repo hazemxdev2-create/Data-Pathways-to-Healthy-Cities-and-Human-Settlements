@@ -2,160 +2,578 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Asteroid Defense Game</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asteroid Defense — Animated HTML Game</title>
   <style>
+    /* =========================
+       Theme variables + reset
+       ========================= */
     :root{
-      --bg:#071024;--card:#0f1724;--accent:#38bdf8;--danger:#fb7185;--muted:#94a3b8;--text:#e6eef8;
+      --bg:#04101a;
+      --card:#071829;
+      --muted:#8aa3b6;
+      --accent:#38bdf8;
+      --accent-2:#7c3aed;
+      --danger:#fb7185;
+      --glass: rgba(255,255,255,0.03);
+      --text:#e6f2fb;
+      --success:#34d399;
+      --shadow: 0 8px 30px rgba(2,6,23,0.6);
     }
-    [data-theme="light"] {
-      --bg:#f3f4f6;--card:#ffffff;--accent:#2563eb;--danger:#dc2626;--muted:#6b7280;--text:#111827;
+    [data-theme="light"]{
+      --bg:#f6f9fc;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --accent-2:#7c3aed;
+      --danger:#dc2626;
+      --glass: rgba(2,6,23,0.03);
+      --text:#0b1220;
+      --success:#059669;
+      --shadow: 0 10px 30px rgba(2,6,23,0.06);
     }
-    body{background:var(--bg);color:var(--text);margin:0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;padding:16px}
-    .app{width:100%;max-width:1000px}
-    .panel{background:var(--card);padding:14px;border-radius:12px;margin-bottom:12px}
-    button{cursor:pointer;padding:8px 12px;border-radius:10px;border:0;margin:4px;font-weight:600}
-    button.primary{background:var(--accent);color:white}
-    button.ghost{background:transparent;border:1px solid var(--muted);color:var(--text)}
-    .row{display:flex;gap:8px;flex-wrap:wrap}
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:var(--text);background:radial-gradient(1200px 600px at 10% 10%, rgba(56,189,248,0.03), transparent), var(--bg);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+    a{color:inherit}
+    .app{max-width:1100px;margin:28px auto;padding:18px;display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}
+    @media (max-width:980px){ .app{grid-template-columns:1fr;padding:12px} }
+
+    /* =========================
+       Header / controls
+       ========================= */
+    header.controls{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:var(--shadow)}
+    h1{font-size:18px;margin:0}
+    .subtitle{font-size:13px;color:var(--muted)}
+
+    /* =========================
+       Left panel (controls)
+       ========================= */
+    .panel{background:linear-gradient(180deg,var(--card),color-mix(in srgb, var(--card) 90%, rgba(255,255,255,0.01)));padding:14px;border-radius:12px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,0.02)}
+    .section{margin-bottom:12px}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .btn{background:var(--accent);color:#04202b;padding:8px 10px;border-radius:10px;border:0;font-weight:700;cursor:pointer;transition:transform .18s ease,box-shadow .18s}
+    .btn.ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,0.04);font-weight:600}
+    .btn:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(2,6,23,0.45)}
     .small{font-size:13px;color:var(--muted)}
-    .score{font-size:24px;font-weight:bold;color:var(--accent)}
+    label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
+
+    /* presets list */
+    .preset-list{display:grid;gap:8px;margin-top:10px;max-height:230px;overflow:auto;padding-right:6px}
+    .preset-card{background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);display:flex;gap:8px;align-items:center;cursor:pointer;transition:transform .22s,box-shadow .22s,opacity .22s}
+    .preset-card:hover{transform:translateY(-6px);box-shadow:0 12px 36px rgba(0,0,0,0.5)}
+    .preset-icon{width:44px;height:44;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:800}
+    .preset-meta{font-size:13px}
+    .preset-meta .title{font-weight:700}
+    .preset-meta .desc{font-size:12px;color:var(--muted);margin-top:4px}
+
+    /* custom inputs: slider + number */
+    .input-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+    input[type=range]{-webkit-appearance:none;width:100%;height:8px;border-radius:8px;background:linear-gradient(90deg,var(--accent),var(--accent-2));outline:none}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:white;box-shadow:0 6px 18px rgba(2,6,23,0.3)}
+    .num{width:86px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
+
+    /* strategy buttons */
+    .strategies{display:flex;gap:8px;margin-top:8px}
+    .strategy{flex:1;padding:10px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);cursor:pointer;border:1px solid rgba(255,255,255,0.02);text-align:center;transition:transform .18s,box-shadow .18s}
+    .strategy.selected{box-shadow:0 12px 36px rgba(56,189,248,0.08);transform:translateY(-6px);border-color:rgba(56,189,248,0.18)}
+    .strategy .k{font-weight:800;margin-bottom:6px}
+
+    /* =========================
+       Right panel (play area)
+       ========================= */
+    .play{display:flex;flex-direction:column;gap:12px}
+    .sky{height:420px;border-radius:12px;position:relative;overflow:hidden;background:linear-gradient(180deg,#062033 0%, #041024 100%);box-shadow:var(--shadow);border:1px solid rgba(255,255,255,0.02)}
+    .ground{height:110px;background:linear-gradient(180deg,#05202b,#02161a);display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:0 0 12px 12px}
+    .hud{position:absolute;left:12px;top:12px;background:rgba(1,6,12,0.45);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);font-size:13px;color:var(--muted)}
+    .stats{position:absolute;right:12px;top:12px;text-align:right;color:var(--muted);font-size:13px}
+
+    /* asteroid + trail */
+    .asteroid{position:absolute;width:48px;height:48px;border-radius:50%;background:conic-gradient(#8b5e34,#6b3f1d);box-shadow:0 10px 32px rgba(0,0,0,0.6);transform:translate(-50%,-50%) scale(.9);will-change:transform}
+    .trail{position:absolute;left:50%;top:0;width:12px;height:220px;border-radius:8px;filter:blur(8px);opacity:.85;transform:translateX(-50%);pointer-events:none}
+
+    /* explosion */
+    .explosion{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;border-radius:50%;mix-blend-mode:screen}
+
+    /* results panel: auto-grow + animated lines */
+    .result-panel{padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);transition:all .35s cubic-bezier(.2,.9,.3,1);min-height:48px;white-space:pre-wrap;overflow-wrap:break-word}
+    .result-line{opacity:0;transform:translateY(6px);animation:lineIn .45s forwards}
+    @keyframes lineIn{to{opacity:1;transform:translateY(0)}}
+
+    /* button micro animations */
+    .micro{transition:transform .12s ease,color .12s ease;display:inline-block}
+    .micro:active{transform:scale(.96)}
+    /* glow on focus */
+    .focus-glow:focus, .focus-glow:hover{outline:none;box-shadow:0 8px 30px rgba(56,189,248,0.08)}
+
+    /* arabic right-to-left support */
+    [dir="rtl"]{direction:rtl}
+    [dir="rtl"] .row{flex-direction:row-reverse}
+
   </style>
 </head>
-<body data-theme="dark">
+<body data-theme="dark" dir="ltr">
   <div class="app">
-    <header class="panel">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <h1 id="title">🌍 Asteroid Defense Game</h1>
-        <div class="row">
-          <button id="themeBtn" class="ghost">🌙</button>
-          <button id="langBtn" class="ghost">EN</button>
+
+    <!-- LEFT: Controls -->
+    <div class="panel">
+      <div class="section">
+        <div class="brand">
+          <div class="logo">AD</div>
+          <div>
+            <h1>Asteroid Defense</h1>
+            <div class="subtitle small">Create, choose, and defend — animated & sharable</div>
+          </div>
         </div>
       </div>
-    </header>
 
-    <div class="panel">
-      <div class="row">
-        <button id="customBtn" class="primary">🌌 Create Your Own</button>
-        <button id="historyBtn" class="ghost">☄️ Historical Impacts</button>
+      <div class="section">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div class="row">
+            <button id="btnCustom" class="btn">🌌 Create Your Own</button>
+            <button id="btnHistory" class="btn ghost">☄️ Historical Impacts</button>
+          </div>
+
+          <div class="row">
+            <button id="themeToggle" class="btn ghost micro" title="Toggle theme">🌙</button>
+            <button id="langToggle" class="btn ghost micro" title="Toggle language">EN</button>
+          </div>
+        </div>
       </div>
-      <div id="customInputs">
-        <label id="diamLabel">Diameter (m)</label>
-        <input type="number" id="diameter" value="100">
-        <label id="velLabel">Velocity (km/s)</label>
-        <input type="number" id="velocity" value="20">
-        <label id="denLabel">Density (kg/m³)</label>
-        <input type="number" id="density" value="3000">
-        <label id="popLabel">Population density (/km²)</label>
-        <input type="number" id="pop" value="1000">
+
+      <!-- Preset / custom area -->
+      <div class="section">
+        <div id="customArea">
+          <label id="label_diameter">Diameter (m)</label>
+          <div class="input-row">
+            <input id="diamRange" type="range" min="1" max="10000" value="100">
+            <input id="diamNum" class="num" type="number" min="1" max="10000" value="100">
+          </div>
+
+          <label id="label_velocity">Velocity (km/s)</label>
+          <div class="input-row">
+            <input id="velRange" type="range" min="1" max="70" value="20">
+            <input id="velNum" class="num" type="number" min="1" max="70" value="20">
+          </div>
+
+          <label id="label_density">Density (kg/m³)</label>
+          <div class="input-row">
+            <input id="denRange" type="range" min="500" max="8000" value="3000">
+            <input id="denNum" class="num" type="number" min="500" max="8000" value="3000">
+          </div>
+
+          <label id="label_pop">Population density (people / km²)</label>
+          <div class="input-row">
+            <input id="popRange" type="range" min="0" max="15000" value="1000">
+            <input id="popNum" class="num" type="number" min="0" max="15000" value="1000">
+          </div>
+        </div>
+
+        <div id="historyArea" style="display:none">
+          <div class="small">Pick a historical impact (animated preview will play)</div>
+          <div class="preset-list" id="presetList"></div>
+        </div>
       </div>
-      <div id="historyList" style="display:none">
-        <button data-preset="chelyabinsk">Chelyabinsk 2013</button>
-        <button data-preset="tunguska">Tunguska 1908</button>
-        <button data-preset="chicxulub">Chicxulub 66Mya</button>
+
+      <div class="section">
+        <div class="small">Select a mitigation strategy</div>
+        <div class="strategies">
+          <div id="sDeflect" class="strategy focus-glow"><div class="k">🚀</div><div class="small">Deflect<br><span class="small">Change trajectory</span></div></div>
+          <div id="sFragment" class="strategy focus-glow"><div class="k">💥</div><div class="small">Fragment<br><span class="small">Break into pieces</span></div></div>
+          <div id="sEvacuate" class="strategy focus-glow"><div class="k">🏃</div><div class="small">Evacuate<br><span class="small">Move people out</span></div></div>
+        </div>
+      </div>
+
+      <div class="section row" style="justify-content:space-between">
+        <button id="launchBtn" class="btn">▶️ Simulate</button>
+        <button id="resetBtn" class="btn ghost">Reset</button>
+      </div>
+
+      <div class="section small">
+        Tip: you can drag sliders or type numbers. Use the theme and language toggles (top-right).
       </div>
     </div>
 
-    <div class="panel">
-      <div class="row">
-        <button id="deflect">🚀 Deflect</button>
-        <button id="fragment">💥 Fragment</button>
-        <button id="evacuate">🏃 Evacuate</button>
-      </div>
-      <button id="launch" class="primary">▶️ Simulate</button>
-    </div>
+    <!-- RIGHT: Play area -->
+    <div class="play">
+      <div class="sky panel" id="sky">
+        <div class="hud" id="hud">Status: idle</div>
+        <div class="stats" id="stats">
+          <div id="energyText">Energy: —</div>
+          <div id="blastText">Blast radius: —</div>
+          <div id="casText">Casualties: —</div>
+        </div>
 
-    <div class="panel">
-      <div id="results">No run yet</div>
-      <div class="score" id="score">—</div>
+        <!-- animated elements -->
+        <div id="asteroid" class="asteroid" style="display:none"></div>
+        <canvas id="trail" class="trail" width="12" height="360" style="display:none"></canvas>
+        <div id="explosion" class="explosion" style="display:none"></div>
+
+        <!-- subtle background animations -->
+        <svg style="position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen;opacity:.06">
+          <defs>
+            <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#38bdf8"/></linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r="180" fill="url(#g1)"/>
+        </svg>
+      </div>
+
+      <div class="ground panel" id="ground">
+        <div>
+          <div class="small">Result summary</div>
+          <div id="resultPanel" class="result-panel">No run yet — run the simulation to see results. Results expand smoothly as content grows.</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small">Score</div>
+          <div id="score" style="font-size:22px;font-weight:800;color:var(--accent)">—</div>
+        </div>
+      </div>
     </div>
   </div>
 
-<script>
-const PRESETS = {
-  chelyabinsk:{diameter:20,velocity:19,density:3000,pop:4000},
-  tunguska:{diameter:60,velocity:15,density:2700,pop:1},
-  chicxulub:{diameter:10000,velocity:20,density:3000,pop:0}
-};
-let chosenStrategy=null;
-let lang="en";
+  <script>
+  (function(){
+    /* =========================
+       Data & helpers
+       ========================= */
+    const PRESETS = [
+      { id:'chelyabinsk', title:'Chelyabinsk 2013', emoji:'☄️', diameter:20, velocity:19, density:3000, pop:4200, desc:'A ~20 m meteoroid exploded over Chelyabinsk (airburst) — many injuries due to shockwave.' },
+      { id:'tunguska', title:'Tunguska 1908', emoji:'🔥', diameter:60, velocity:15, density:2700, pop:2, desc:'Large airburst over Siberia flattened ~2,000 km² of forest.' },
+      { id:'chicxulub', title:'Chicxulub (66 Mya)', emoji:'💀', diameter:10000, velocity:20, density:3000, pop:0, desc:'Mass-extinction scale impact, associated with the dinosaur extinction.' },
+      { id:'barringer', title:'Barringer Crater', emoji:'🪨', diameter:50, velocity:12, density:3000, pop:0, desc:'An iron meteorite formed a ~1.2 km crater in Arizona ~50,000 years ago.' },
+      { id:'sikhote', title:'Sikhote-Alin 1947', emoji:'🌩️', diameter:5, velocity:12, density:7800, pop:0, desc:'A large iron meteor shower over Russia; many fragments found.' }
+    ];
 
-// Physics
-function kineticEnergyJ(d,dens,v){const r=d/2,vol=4/3*Math.PI*r**3,m=vol*dens;return 0.5*m*v*v;}
-function joulesToMt(j){return j/4.184e15;}
-function blastR(E){return 60*Math.pow(E/1e12,1/3);}
-function casualties(R,pop){return Math.round(Math.PI*(R/1000)**2*pop*0.02);}
+    /* physics helpers (same simplifications as before) */
+    function kineticEnergyJ(diameter_m, density_kgm3, velocity_ms){
+      const r = diameter_m / 2;
+      const volume = (4/3) * Math.PI * r * r * r;
+      const mass = volume * density_kgm3;
+      return 0.5 * mass * velocity_ms * velocity_ms;
+    }
+    function joulesToMegatons(j){ return j / 4.184e15; }
+    function blastRadiusMeters(E){ const k = 60; return k * Math.pow(E / 1e12, 1/3); }
+    function estimateCasualties(blastR_m, popDensity){ const area_km2 = Math.PI * Math.pow(blastR_m/1000,2); return Math.round(area_km2 * popDensity * 0.02); }
 
-// Simulation
-function runSim(){
-  const d=+document.getElementById("diameter").value;
-  const v=+document.getElementById("velocity").value*1000;
-  const dens=+document.getElementById("density").value;
-  const pop=+document.getElementById("pop").value;
-  if(!chosenStrategy){alert("Choose strategy first");return;}
-  const E=kineticEnergyJ(d,dens,v);
-  const mt=joulesToMt(E);
-  const R=blastR(E);
-  const cas=casualties(R,pop);
-  let prevented=0;
-  if(chosenStrategy==="deflect") prevented=cas*0.7;
-  if(chosenStrategy==="fragment") prevented=cas*0.5;
-  if(chosenStrategy==="evacuate") prevented=cas*0.4;
-  const score=Math.round(prevented/(cas+1)*100);
-  document.getElementById("results").innerText=
-    (lang==="en"?
-     `Energy: ${mt.toFixed(2)} Mt, Blast radius: ${Math.round(R)} m, Casualties: ${cas}, Prevented: ${Math.round(prevented)}`:
-     `الطاقة: ${mt.toFixed(2)} ميغاطن، نصف قطر الانفجار: ${Math.round(R)} م، الضحايا: ${cas}، المُنقَذون: ${Math.round(prevented)}`);
-  document.getElementById("score").innerText=score+"%";
-}
+    /* DOM refs */
+    const body = document.body;
+    const sky = document.getElementById('sky');
+    const asteroid = document.getElementById('asteroid');
+    const trailCanvas = document.getElementById('trail');
+    const explosion = document.getElementById('explosion');
+    const hud = document.getElementById('hud');
+    const energyText = document.getElementById('energyText');
+    const blastText = document.getElementById('blastText');
+    const casText = document.getElementById('casText');
+    const resultPanel = document.getElementById('resultPanel');
+    const scoreEl = document.getElementById('score');
 
-// Buttons
-document.getElementById("deflect").onclick=()=>chosenStrategy="deflect";
-document.getElementById("fragment").onclick=()=>chosenStrategy="fragment";
-document.getElementById("evacuate").onclick=()=>chosenStrategy="evacuate";
-document.getElementById("launch").onclick=runSim;
+    const diamRange = document.getElementById('diamRange');
+    const diamNum = document.getElementById('diamNum');
+    const velRange = document.getElementById('velRange');
+    const velNum = document.getElementById('velNum');
+    const denRange = document.getElementById('denRange');
+    const denNum = document.getElementById('denNum');
+    const popRange = document.getElementById('popRange');
+    const popNum = document.getElementById('popNum');
 
-document.getElementById("customBtn").onclick=()=>{
-  document.getElementById("customInputs").style.display="block";
-  document.getElementById("historyList").style.display="none";
-};
-document.getElementById("historyBtn").onclick=()=>{
-  document.getElementById("customInputs").style.display="none";
-  document.getElementById("historyList").style.display="block";
-};
-document.querySelectorAll("#historyList button").forEach(btn=>{
-  btn.onclick=()=>{
-    const p=PRESETS[btn.dataset.preset];
-    diameter.value=p.diameter;velocity.value=p.velocity;density.value=p.density;pop.value=p.pop;
-  };
-});
+    const btnCustom = document.getElementById('btnCustom');
+    const btnHistory = document.getElementById('btnHistory');
+    const customArea = document.getElementById('customArea');
+    const historyArea = document.getElementById('historyArea');
+    const presetList = document.getElementById('presetList');
+    const sDeflect = document.getElementById('sDeflect');
+    const sFragment = document.getElementById('sFragment');
+    const sEvacuate = document.getElementById('sEvacuate');
+    const launchBtn = document.getElementById('launchBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const themeToggle = document.getElementById('themeToggle');
+    const langToggle = document.getElementById('langToggle');
 
-// Theme toggle
-document.getElementById("themeBtn").onclick=()=>{
-  const body=document.body;
-  body.dataset.theme=body.dataset.theme==="light"?"dark":"light";
-};
+    /* state */
+    let selectedPreset = null;
+    let selectedStrategy = null;
+    let lang = 'en';
+    let animRunning = false;
 
-// Language toggle
-document.getElementById("langBtn").onclick=()=>{
-  lang=lang==="en"?"ar":"en";
-  document.getElementById("langBtn").innerText=lang.toUpperCase();
-  if(lang==="ar"){
-    document.getElementById("title").innerText="🌍 لعبة الدفاع عن الأرض";
-    diamLabel.innerText="القطر (م)";
-    velLabel.innerText="السرعة (كم/ث)";
-    denLabel.innerText="الكثافة (كغ/م³)";
-    popLabel.innerText="الكثافة السكانية (/كم²)";
-    document.getElementById("launch").innerText="▶️ محاكاة";
-  }else{
-    document.getElementById("title").innerText="🌍 Asteroid Defense Game";
-    diamLabel.innerText="Diameter (m)";
-    velLabel.innerText="Velocity (km/s)";
-    denLabel.innerText="Density (kg/m³)";
-    popLabel.innerText="Population density (/km²)";
-    document.getElementById("launch").innerText="▶️ Simulate";
-  }
-};
-</script>
+    /* ================
+       UI wiring
+       ================ */
+    // sync sliders <-> numbers
+    function sync(range, num){
+      range.addEventListener('input',()=>{ num.value = range.value; highlight(range); });
+      num.addEventListener('input',()=>{ range.value = num.value; highlight(range); });
+    }
+    sync(diamRange, diamNum);
+    sync(velRange, velNum);
+    sync(denRange, denNum);
+    sync(popRange, popNum);
+
+    function highlight(el){
+      el.style.boxShadow = '0 8px 28px rgba(56,189,248,0.08)';
+      setTimeout(()=>el.style.boxShadow='',240);
+    }
+
+    // tabs
+    btnCustom.addEventListener('click', ()=>{ customArea.style.display='block'; historyArea.style.display='none'; btnCustom.classList.remove('ghost'); btnHistory.classList.add('ghost'); });
+    btnHistory.addEventListener('click', ()=>{ customArea.style.display='none'; historyArea.style.display='block'; btnHistory.classList.remove('ghost'); btnCustom.classList.add('ghost'); });
+
+    // populate presets
+    function populatePresets(){
+      presetList.innerHTML = '';
+      PRESETS.forEach(p=>{
+        const el = document.createElement('div');
+        el.className = 'preset-card';
+        el.innerHTML = `<div class="preset-icon">${p.emoji}</div>
+                        <div class="preset-meta"><div class="title">${p.title}</div><div class="desc small">${p.desc}</div></div>`;
+        el.addEventListener('click', ()=>{
+          playPresetPreview(p);
+          selectPreset(p);
+          // visual select
+          presetList.querySelectorAll('.preset-card').forEach(c=>c.classList.remove('selected'));
+          el.classList.add('selected');
+        });
+        presetList.appendChild(el);
+      });
+    }
+    populatePresets();
+
+    function selectPreset(p){
+      selectedPreset = p;
+      // fill inputs with preset values
+      diamRange.value = p.diameter; diamNum.value = p.diameter;
+      velRange.value = p.velocity; velNum.value = p.velocity;
+      denRange.value = p.density; denNum.value = p.density;
+      popRange.value = p.pop; popNum.value = p.pop;
+    }
+
+    // strategies
+    [sDeflect, sFragment, sEvacuate].forEach(el=>{
+      el.addEventListener('click', ()=>{
+        [sDeflect,sFragment,sEvacuate].forEach(x=>x.classList.remove('selected'));
+        el.classList.add('selected');
+        if(el===sDeflect) selectedStrategy='deflect';
+        if(el===sFragment) selectedStrategy='fragment';
+        if(el===sEvacuate) selectedStrategy='evacuate';
+      });
+    });
+
+    // theme toggle
+    themeToggle.addEventListener('click', ()=>{
+      const current = body.dataset.theme === 'light' ? 'light' : 'dark';
+      body.dataset.theme = current === 'light' ? 'dark' : 'light';
+      themeToggle.textContent = body.dataset.theme === 'light' ? '☀️' : '🌙';
+    });
+
+    // language toggle
+    langToggle.addEventListener('click', ()=>{
+      lang = lang === 'en' ? 'ar' : 'en';
+      langToggle.textContent = lang === 'en' ? 'EN' : 'AR';
+      // switch direction & some labels
+      document.documentElement.lang = lang;
+      document.body.dir = (lang==='ar') ? 'rtl' : 'ltr';
+      // update labels
+      if(lang==='ar'){
+        document.getElementById('label_diameter').innerText = 'القطر (م)';
+        document.getElementById('label_velocity').innerText = 'السرعة (كم/ث)';
+        document.getElementById('label_density').innerText = 'الكثافة (كغ/م³)';
+        document.getElementById('label_pop').innerText = 'الكثافة السكانية (/كم²)';
+        launchBtn.textContent = '▶️ محاكاة';
+        resetBtn.textContent = 'إعادة ضبط';
+      }else{
+        document.getElementById('label_diameter').innerText = 'Diameter (m)';
+        document.getElementById('label_velocity').innerText = 'Velocity (km/s)';
+        document.getElementById('label_density').innerText = 'Density (kg/m³)';
+        document.getElementById('label_pop').innerText = 'Population density (people / km²)';
+        launchBtn.textContent = '▶️ Simulate';
+        resetBtn.textContent = 'Reset';
+      }
+    });
+
+    // reset
+    resetBtn.addEventListener('click', ()=>{
+      selectedPreset = null;
+      selectedStrategy = null;
+      [sDeflect,sFragment,sEvacuate].forEach(x=>x.classList.remove('selected'));
+      diamRange.value = 100; diamNum.value = 100;
+      velRange.value = 20; velNum.value = 20;
+      denRange.value = 3000; denNum.value = 3000;
+      popRange.value = 1000; popNum.value = 1000;
+      resultPanel.innerText = lang==='ar'? 'لا توجد محاكاة بعد — شغّل المحاكي لمشاهدة النتائج.' : 'No run yet — run the simulation to see results.';
+      scoreEl.textContent = '—';
+      energyText.textContent = 'Energy: —';
+      blastText.textContent = 'Blast radius: —';
+      casText.textContent = 'Casualties: —';
+      hud.textContent = lang==='ar' ? 'الحالة: خامل' : 'Status: idle';
+    });
+
+    /* =========================
+       Animation helpers
+       ========================= */
+    const tctx = trailCanvas.getContext('2d');
+    function drawTrail(intensity){
+      tctx.clearRect(0,0,trailCanvas.width,trailCanvas.height);
+      const g = tctx.createLinearGradient(6,0,6,trailCanvas.height);
+      g.addColorStop(0,'rgba(255,220,120,'+intensity+')');
+      g.addColorStop(1,'rgba(255,120,30,0)');
+      tctx.fillStyle = g;
+      tctx.fillRect(0,0,trailCanvas.width,trailCanvas.height);
+    }
+
+    function animateAsteroid({duration=2000, onImpact}){
+      if(animRunning) return;
+      animRunning = true;
+      asteroid.style.display = 'block';
+      trailCanvas.style.display = 'block';
+      const startTop = -80;
+      const endTop = sky.clientHeight - 160; // above ground area
+      const start = performance.now();
+      function step(now){
+        const t = Math.min(1,(now-start)/duration);
+        const ease = 1 - Math.pow(1-t,3);
+        const top = startTop + (endTop - startTop) * ease;
+        const sway = Math.sin(t*Math.PI*2)*120*(1-t);
+        asteroid.style.top = top + 'px';
+        asteroid.style.left = `calc(50% + ${sway}px)`;
+        trailCanvas.style.top = (top+18) + 'px';
+        trailCanvas.style.left = `calc(50% + ${sway-6}px)`;
+        drawTrail(1-t);
+        if(t < 1) requestAnimationFrame(step);
+        else {
+          asteroid.style.display = 'none';
+          trailCanvas.style.display = 'none';
+          animRunning = false;
+          if(onImpact) onImpact();
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    function showExplosion(intensity){
+      const max = Math.min(520, Math.round(120 + intensity/20));
+      explosion.style.display = 'block';
+      explosion.style.width = max + 'px';
+      explosion.style.height = max + 'px';
+      explosion.style.left = '50%';
+      explosion.style.top = (sky.clientHeight - 220) + 'px';
+      explosion.style.background = `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,200,120,0.9) 28%, rgba(255,130,50,0.6) 48%, transparent 70%)`;
+      explosion.style.boxShadow = `0 0 ${Math.round(max/2)}px rgba(255,150,60,0.6)`;
+      explosion.style.opacity = '1';
+      // animate fade
+      explosion.animate([{opacity:1, transform:'translateX(-50%) scale(0.4)'},{opacity:0, transform:'translateX(-50%) scale(1.3)'}],{duration:900,easing:'cubic-bezier(.2,.9,.3,1)'});
+      setTimeout(()=>explosion.style.display='none',950);
+    }
+
+    /* preset preview animation: small fall + bounce to show preview */
+    function playPresetPreview(preset){
+      hud.textContent = (lang==='ar') ? `معاينة: ${preset.title}` : `Preview: ${preset.title}`;
+      // quick tiny animation: show asteroid drop & small puff
+      animateAsteroid({duration:900, onImpact: ()=>{ showExplosion(Math.min(600,preset.diameter * preset.velocity)); hud.textContent = (lang==='ar')? 'معاينة اكتملت' : 'Preview complete'; setTimeout(()=>hud.textContent = (lang==='ar') ? 'جاهز' : 'Ready', 900); }});
+    }
+
+    /* =========================
+       Simulation execution
+       ========================= */
+    function runSimulation(){
+      if(animRunning) return;
+      const diameter = Math.max(0.1, Number(diamNum.value));
+      const velocity = Math.max(0.1, Number(velNum.value));
+      const density = Math.max(10, Number(denNum.value));
+      const pop = Math.max(0, Number(popNum.value));
+      if(!selectedStrategy){
+        alert(lang==='ar'? 'اختر استراتيجية أولاً' : 'Choose a strategy first');
+        return;
+      }
+      hud.textContent = lang==='ar'? 'المحاكاة قيد التشغيل…' : 'Simulating…';
+      // compute energy
+      const E = kineticEnergyJ(diameter, density, velocity*1000);
+      const megatons = joulesToMegatons(E);
+      const blastR = blastRadiusMeters(E);
+      const casualties = estimateCasualties(blastR, pop);
+
+      // mitigation approximations
+      let prevented = 0;
+      if(selectedStrategy === 'deflect') prevented = Math.round(casualties * 0.75);
+      else if(selectedStrategy === 'fragment') prevented = Math.round(casualties * 0.55);
+      else if(selectedStrategy === 'evacuate') prevented = Math.round(casualties * 0.50);
+
+      // animate asteroid and explosion, then show results
+      animateAsteroid({duration: 1800, onImpact: ()=>{
+        showExplosion(Math.min(2000, E/1e10));
+        // update HUD & stats
+        energyText.textContent = (lang==='ar')? `الطاقة: ${megatons.toFixed(2)} ميغاطن` : `Energy: ${megatons.toFixed(2)} Mt`;
+        blastText.textContent = (lang==='ar')? `نصف قطر الانفجار: ${Math.round(blastR)} م` : `Blast radius: ${Math.round(blastR)} m`;
+        casText.textContent = (lang==='ar')? `الضحايا: ${casualties.toLocaleString()}` : `Casualties: ${casualties.toLocaleString()}`;
+
+        // results panel: build lines with staggered animation class
+        const lines = [];
+        if(lang==='ar'){
+          lines.push(`النتائج:`);
+          lines.push(`القطر: ${diameter} م`);
+          lines.push(`السرعة: ${velocity} كم/ث`);
+          lines.push(`الكثافة: ${density} كغ/م³`);
+          lines.push(`الكثافة السكانية: ${pop} /كم²`);
+          lines.push(`الطاقة: ${megatons.toFixed(3)} ميغاطن TNT`);
+          lines.push(`نصف قطر الانفجار: ${Math.round(blastR)} م`);
+          lines.push(`الضحايا (بدون إجراء): ${casualties.toLocaleString()}`);
+          lines.push(`الضحايا المتوقع إنقاذهم: ${prevented.toLocaleString()}`);
+          lines.push(`الاستراتيجية: ${selectedStrategy === 'deflect' ? 'التحويل' : selectedStrategy==='fragment' ? 'التفتيت' : 'الإخلاء'}`);
+        } else {
+          lines.push('Results:');
+          lines.push(`Diameter: ${diameter} m`);
+          lines.push(`Velocity: ${velocity} km/s`);
+          lines.push(`Density: ${density} kg/m³`);
+          lines.push(`Population density: ${pop} /km²`);
+          lines.push(`Energy: ${megatons.toFixed(3)} Mt TNT`);
+          lines.push(`Blast radius: ${Math.round(blastR)} m`);
+          lines.push(`Casualties (no action): ${casualties.toLocaleString()}`);
+          lines.push(`Casualties prevented: ${prevented.toLocaleString()}`);
+          lines.push(`Strategy: ${selectedStrategy}`);
+        }
+
+        // compose resultPanel: clear then add lines with fade-in delay
+        resultPanel.innerHTML = '';
+        lines.forEach((ln,i)=>{
+          const div = document.createElement('div');
+          div.className = 'result-line';
+          div.style.animationDelay = (i*80) + 'ms';
+          div.textContent = ln;
+          resultPanel.appendChild(div);
+        });
+
+        // score
+        const score = Math.max(0, Math.round(prevented / (casualties + 1) * 100));
+        scoreEl.textContent = score + '%';
+
+        hud.textContent = lang==='ar'? 'المحاكاة انتهت' : 'Simulation complete';
+      }});
+    }
+
+    launchBtn.addEventListener('click', runSimulation);
+
+    // attach quick selection from preset when user clicks a preset card: done in populatePresets -> selectPreset
+
+    // clicking a preset triggers preview + sets selectedPreset - already wired
+    // initial state
+    resetBtn.click();
+
+    // small accessibility: Enter runs simulation
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){
+        runSimulation();
+      }
+    });
+
+    // expose few things to global for convenience during manual edits
+    window.AsteroidDefense = {
+      selectPreset,
+      PRESETS,
+      runSimulation
+    };
+
+  })();
+  </script>
 </body>
 </html>
