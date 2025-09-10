@@ -1,186 +1,303 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Asteroid Defense Game</title>
-<style>
-  :root {
-    --bg:#0b1221; --card:#172135; --accent:#38bdf8; --danger:#ef4444; --muted:#94a3b8; --text:#e6eef8;
-  }
-  [data-theme="light"] {
-    --bg:#f9fafb; --card:#ffffff; --accent:#2563eb; --danger:#dc2626; --muted:#6b7280; --text:#111827;
-  }
-  body { margin:0; background:var(--bg); color:var(--text); font-family:sans-serif; padding:16px; }
-  .app { max-width:1000px; margin:auto; }
-  .panel { background:var(--card); padding:16px; border-radius:12px; margin-bottom:12px; box-shadow:0 4px 10px rgba(0,0,0,0.2); }
-  h1 { margin:0; }
-  button { cursor:pointer; padding:8px 14px; border-radius:10px; border:0; margin:4px; font-weight:600; transition:transform 0.2s; }
-  button:hover { transform:scale(1.08); }
-  button.primary { background:var(--accent); color:white; }
-  button.ghost { background:transparent; border:1px solid var(--muted); color:var(--text); }
-  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-  label { display:block; margin-top:6px; font-size:14px; }
-  input[type=number], input[type=range] { width:100%; margin:4px 0; }
-  #results { overflow:hidden; max-height:40px; transition:max-height 0.6s ease; white-space:pre-wrap; }
-  #results.show { max-height:400px; }
-  .score { font-size:24px; font-weight:bold; color:var(--accent); margin-top:8px; }
-  .anim-panel { position:relative; height:200px; background:radial-gradient(circle at center, #1e293b, #0f172a); border-radius:12px; overflow:hidden; }
-  .meteor, .earth, .rocket { position:absolute; }
-  .earth { bottom:10px; left:50%; transform:translateX(-50%); font-size:60px; }
-  .meteor { top:-50px; left:10%; font-size:40px; opacity:0; transition:all 2s linear; }
-  .rocket { top:120px; left:20%; font-size:30px; opacity:0; transition:all 1.5s linear; }
-  .tip { font-size:13px; color:var(--muted); margin-top:6px; }
-</style>
+  <meta charset="UTF-8">
+  <title>Asteroid Impact Simulator</title>
+  <style>
+    :root {
+      --bg: #111;
+      --fg: #eee;
+      --accent: #4cafef;
+    }
+    [data-theme="light"] {
+      --bg: #f8f8f8;
+      --fg: #111;
+      --accent: #0077cc;
+    }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      transition: background 0.5s, color 0.5s;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      padding: 1em;
+      background: rgba(0,0,0,0.2);
+    }
+    button {
+      padding: 0.5em 1em;
+      border: none;
+      margin: 0.2em;
+      border-radius: 8px;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    button:hover { transform: scale(1.05); }
+    h1 { text-align: center; }
+    .panel {
+      max-width: 800px;
+      margin: 1em auto;
+      padding: 1em;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+    }
+    .results {
+      overflow: hidden;
+      transition: max-height 0.6s ease, padding 0.6s ease;
+      max-height: 0;
+      padding: 0 1em;
+      white-space: pre-line;
+    }
+    .results.show {
+      max-height: 500px;
+      padding: 1em;
+    }
+    .anim-area {
+      position: relative;
+      height: 200px;
+      margin: 1em 0;
+      background: radial-gradient(circle at center, #223 30%, #112 100%);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .earth {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: blue;
+      box-shadow: 0 0 20px rgba(0,0,255,0.7);
+    }
+    .meteor {
+      position: absolute;
+      top: -40px;
+      left: -40px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: orange;
+      box-shadow: 0 0 20px rgba(255,140,0,0.9);
+    }
+    .explosion {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, yellow, red, transparent);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .tip {
+      font-size: 0.9em;
+      opacity: 0.7;
+      margin-top: 1em;
+    }
+  </style>
 </head>
 <body data-theme="dark">
-<div class="app">
-  <header class="panel row" style="justify-content:space-between;">
-    <h1 id="title">🌍 Asteroid Defense Game</h1>
-    <div class="row">
-      <button id="themeBtn" class="ghost">🌙</button>
-      <button id="langBtn" class="ghost">EN</button>
+  <header>
+    <div>
+      <button id="themeBtn">🌙</button>
+      <button id="langBtn">AR</button>
     </div>
   </header>
 
+  <h1 id="title">🌍 Asteroid Impact Simulator</h1>
+
   <div class="panel">
-    <div class="row">
-      <button id="customBtn" class="primary">🌌 Create Your Own</button>
-      <button id="historyBtn" class="ghost">☄️ Historical Impacts</button>
+    <button id="customBtn">🌌 Create Your Own Meteor</button>
+    <button id="historyBtn">☄️ Historical Impacts</button>
+
+    <div id="customPanel" style="display:none; margin-top:1em;">
+      <label>Diameter (m): <input type="number" id="diameter" value="100"></label><br>
+      <label>Velocity (km/s): <input type="number" id="velocity" value="20"></label><br>
+      <label>Density (kg/m³): <input type="number" id="density" value="3000"></label><br>
+      <label>Population Density (per km²): <input type="number" id="popdensity" value="1000"></label><br>
     </div>
-    <div id="customInputs">
-      <label id="diamLabel">Diameter (m)</label>
-      <input type="number" id="diameter" value="100">
-      <label id="velLabel">Velocity (km/s)</label>
-      <input type="number" id="velocity" value="20">
-      <label id="denLabel">Density (kg/m³)</label>
-      <input type="number" id="density" value="3000">
-      <label id="popLabel">Population density (/km²)</label>
-      <input type="number" id="pop" value="1000">
-    </div>
-    <div id="historyList" style="display:none">
-      <button data-preset="chelyabinsk">Chelyabinsk 2013</button>
-      <button data-preset="tunguska">Tunguska 1908</button>
-      <button data-preset="chicxulub">Chicxulub 66Mya</button>
+
+    <div id="historyPanel" style="display:none; margin-top:1em;">
+      <button data-d="20" data-v="19" data-rho="3300" data-pop="1000">Chelyabinsk 2013</button>
+      <button data-d="50" data-v="27" data-rho="3000" data-pop="5">Tunguska 1908</button>
+      <button data-d="10000" data-v="20" data-rho="2500" data-pop="50">Chicxulub 66Mya</button>
     </div>
   </div>
 
   <div class="panel">
-    <p id="strategyTitle">Select a mitigation strategy:</p>
-    <div class="row">
-      <button id="deflect">🚀 Deflect</button>
-      <button id="fragment">💥 Fragment</button>
-      <button id="evacuate">🏃 Evacuate</button>
-    </div>
-    <button id="launch" class="primary">▶️ Start Simulation</button>
-    <p class="tip" id="tip">Tip: you can drag sliders or type numbers. Use the theme and language toggles (top-right).</p>
+    <h3 id="strategyTitle">Select a mitigation strategy</h3>
+    <button class="stratBtn" data-strat="deflect">Deflect</button>
+    <button class="stratBtn" data-strat="fragment">Fragment</button>
+    <button class="stratBtn" data-strat="evacuate">Evacuate</button>
   </div>
 
-  <div class="panel anim-panel">
-    <div class="earth">🌍</div>
-    <div class="meteor" id="meteor">☄️</div>
-    <div class="rocket" id="rocket">🚀</div>
+  <div class="panel anim-area">
+    <div class="earth"></div>
+    <div id="meteor" class="meteor"></div>
+    <div id="explosion" class="explosion"></div>
   </div>
 
-  <div class="panel">
-    <div id="results">No run yet</div>
-    <div class="score" id="score">—</div>
-  </div>
-</div>
+  <div class="panel results" id="results"></div>
+  <p class="tip" id="tip">
+    Tip: you can drag sliders or type numbers. Use the theme and language toggles (top-right).
+  </p>
 
-<script>
-const PRESETS = {
-  chelyabinsk:{diameter:20,velocity:19,density:3000,pop:4000},
-  tunguska:{diameter:60,velocity:15,density:2700,pop:1},
-  chicxulub:{diameter:10000,velocity:20,density:3000,pop:0}
-};
-let chosenStrategy=null; let lang="en";
+  <script>
+    // Dictionaries for EN/AR
+    const dict = {
+      en: {
+        title: "🌍 Asteroid Impact Simulator",
+        custom: "🌌 Create Your Own Meteor",
+        history: "☄️ Historical Impacts",
+        strategyTitle: "Select a mitigation strategy",
+        strat: { deflect: "Deflect", fragment: "Fragment", evacuate: "Evacuate" },
+        tip: "Tip: you can drag sliders or type numbers. Use the theme and language toggles (top-right).",
+        results: (mt,R,cas,prev) =>
+          `Energy: ${mt.toFixed(2)} Mt TNT\nBlast radius: ${Math.round(R)} m\nCasualties: ${cas}\nPrevented: ${Math.round(prev)}`
+      },
+      ar: {
+        title: "🌍 محاكي اصطدام الكويكب",
+        custom: "🌌 أنشئ كويكبك الخاص",
+        history: "☄️ اصطدامات تاريخية",
+        strategyTitle: "اختر استراتيجية التخفيف",
+        strat: { deflect: "انحراف", fragment: "تفتيت", evacuate: "إخلاء" },
+        tip: "💡 ملاحظة: يمكنك سحب المنزلقات أو كتابة الأرقام. استخدم أزرار السمة واللغة (أعلى اليمين).",
+        results: (mt,R,cas,prev) =>
+          `الطاقة: ${mt.toFixed(2)} ميغاطن\nنصف قطر الانفجار: ${Math.round(R)} م\nالضحايا: ${cas}\nالمُنقَذون: ${Math.round(prev)}`
+      }
+    };
 
-// Physics
-function kineticEnergyJ(d,dens,v){const r=d/2,vol=4/3*Math.PI*r**3,m=vol*dens;return 0.5*m*v*v;}
-function joulesToMt(j){return j/4.184e15;}
-function blastR(E){return 60*Math.pow(E/1e12,1/3);}
-function casualties(R,pop){return Math.round(Math.PI*(R/1000)**2*pop*0.02);}
+    let lang = "en";
+    let selectedAsteroid = { d:100, v:20, rho:3000, pop:1000 };
 
-// Simulation
-function runSim(){
-  const d=+diameter.value, v=+velocity.value*1000, dens=+density.value, pop=+popInput.value;
-  if(!chosenStrategy){alert(lang==="en"?"Choose strategy first":"اختر استراتيجية أولا");return;}
-  const E=kineticEnergyJ(d,dens,v), mt=joulesToMt(E), R=blastR(E), cas=casualties(R,pop);
-  let prevented=0;
-  if(chosenStrategy==="deflect") prevented=cas*0.7;
-  if(chosenStrategy==="fragment") prevented=cas*0.5;
-  if(chosenStrategy==="evacuate") prevented=cas*0.4;
-  animateImpact(chosenStrategy,()=> {
-    results.classList.add("show");
-    results.innerText=(lang==="en"?
-     `Energy: ${mt.toFixed(2)} Mt\nBlast radius: ${Math.round(R)} m\nCasualties: ${cas}\nPrevented: ${Math.round(prevented)}`:
-     `الطاقة: ${mt.toFixed(2)} ميغاطن\nنصف قطر الانفجار: ${Math.round(R)} م\nالضحايا: ${cas}\nالمُنقَذون: ${Math.round(prevented)}`);
-    score.innerText=Math.round(prevented/(cas+1)*100)+"%";
-  });
-}
+    const resultsDiv = document.getElementById("results");
+    const meteorEl = document.getElementById("meteor");
+    const explosionEl = document.getElementById("explosion");
 
-// Animations
-function animateImpact(strategy,callback){
-  const meteor=document.getElementById("meteor"), rocket=document.getElementById("rocket");
-  meteor.style.top="-50px"; meteor.style.left="10%"; meteor.style.opacity=1;
-  rocket.style.opacity=0;
-  setTimeout(()=>{
-    meteor.style.top="120px"; meteor.style.left="50%";
-  },50);
-  if(strategy==="deflect"){
-    setTimeout(()=>{ rocket.style.opacity=1; rocket.style.left="30%"; rocket.style.top="50px"; },300);
-    setTimeout(()=>{ meteor.style.left="90%"; meteor.style.top="300px"; meteor.style.opacity=0; },1200);
-  }
-  if(strategy==="fragment"){
-    setTimeout(()=>{ meteor.innerText="💥"; meteor.style.fontSize="20px"; },1200);
-  }
-  if(strategy==="evacuate"){
-    setTimeout(()=>{ meteor.style.top="160px"; },1500);
-  }
-  setTimeout(()=>{callback();meteor.innerText="☄️";meteor.style.opacity=0;rocket.style.opacity=0;},2200);
-}
+    function kineticEnergy(d,rho,v){
+      const r = d/2;
+      const vol = (4/3)*Math.PI*Math.pow(r,3);
+      const m = vol*rho;
+      return 0.5*m*v*v;
+    }
+    function joulesToMt(E){ return E/4.184e15; }
+    function blastRadius(E){ return 60*Math.pow(E/1e12,1/3); }
+    function casualties(R,pop){ return Math.round(Math.PI*Math.pow(R/1000,2)*pop*0.02); }
 
-// Buttons
-const popInput=document.getElementById("pop");
-document.getElementById("deflect").onclick=()=>chosenStrategy="deflect";
-document.getElementById("fragment").onclick=()=>chosenStrategy="fragment";
-document.getElementById("evacuate").onclick=()=>chosenStrategy="evacuate";
-document.getElementById("launch").onclick=runSim;
-document.getElementById("customBtn").onclick=()=>{customInputs.style.display="block";historyList.style.display="none";};
-document.getElementById("historyBtn").onclick=()=>{customInputs.style.display="none";historyList.style.display="block";};
-document.querySelectorAll("#historyList button").forEach(btn=>{
-  btn.onclick=()=>{let p=PRESETS[btn.dataset.preset];diameter.value=p.diameter;velocity.value=p.velocity;density.value=p.density;popInput.value=p.pop;};
-});
+    function runSimulation(strat){
+      // Animate meteor
+      meteorEl.style.transition = "none";
+      meteorEl.style.top = "-40px"; meteorEl.style.left = "-40px";
+      setTimeout(()=>{
+        meteorEl.style.transition = "top 2s linear, left 2s linear";
+        meteorEl.style.top = "120px"; meteorEl.style.left = "calc(50% - 20px)";
+      },50);
 
-// Theme toggle
-document.getElementById("themeBtn").onclick=()=>{
-  const body=document.body;
-  body.dataset.theme=body.dataset.theme==="light"?"dark":"light";
-};
+      meteorEl.addEventListener("transitionend", ()=>{
+        if(strat==="deflect"){
+          meteorEl.style.transition = "top 1.5s linear, left 1.5s linear";
+          meteorEl.style.left = "100%"; meteorEl.style.top = "50px";
+          showResults(strat);
+        } else if(strat==="fragment"){
+          explosionEl.style.left = "calc(50% - 50px)";
+          explosionEl.style.top = "60px";
+          explosionEl.style.opacity = 1;
+          setTimeout(()=>explosionEl.style.opacity=0,1000);
+          meteorEl.style.opacity=0;
+          showResults(strat);
+        } else {
+          explosionEl.style.left = "calc(50% - 50px)";
+          explosionEl.style.top = "100px";
+          explosionEl.style.opacity = 1;
+          setTimeout(()=>explosionEl.style.opacity=0,1000);
+          meteorEl.style.opacity=0;
+          showResults(strat);
+        }
+      }, {once:true});
+    }
 
-// Language toggle
-document.getElementById("langBtn").onclick=()=>{
-  lang=lang==="en"?"ar":"en";
-  langBtn.innerText=lang.toUpperCase();
-  if(lang==="ar"){
-    title.innerText="🌍 لعبة الدفاع عن الأرض";
-    customBtn.innerText="🌌 أنشئ كويكبك الخاص";
-    historyBtn.innerText="☄️ اصطدامات تاريخية";
-    diamLabel.innerText="القطر (م)"; velLabel.innerText="السرعة (كم/ث)"; denLabel.innerText="الكثافة (كغ/م³)"; popLabel.innerText="الكثافة السكانية (/كم²)";
-    strategyTitle.innerText="اختر استراتيجية التخفيف:"; 
-    deflect.innerText="🚀 انحراف"; fragment.innerText="💥 تفتيت"; evacuate.innerText="🏃 إخلاء";
-    launch.innerText="▶️ بدء المحاكاة"; tip.innerText="💡 ملاحظة: يمكنك سحب المنزلقات أو كتابة الأرقام. استخدم أزرار السمة واللغة (أعلى اليمين).";
-  } else {
-    title.innerText="🌍 Asteroid Defense Game";
-    customBtn.innerText="🌌 Create Your Own";
-    historyBtn.innerText="☄️ Historical Impacts";
-    diamLabel.innerText="Diameter (m)"; velLabel.innerText="Velocity (km/s)"; denLabel.innerText="Density (kg/m³)"; popLabel.innerText="Population density (/km²)";
-    strategyTitle.innerText="Select a mitigation strategy:"; 
-    deflect.innerText="🚀 Deflect"; fragment.innerText="💥 Fragment"; evacuate.innerText="🏃 Evacuate";
-    launch.innerText="▶️ Start Simulation"; tip.innerText="Tip: you can drag sliders or type numbers. Use the theme and language toggles (top-right).";
-  }
-};
-</script>
+    function showResults(strat){
+      const d=selectedAsteroid.d, v=selectedAsteroid.v*1000, rho=selectedAsteroid.rho, pop=selectedAsteroid.pop;
+      const E=kineticEnergy(d,rho,v);
+      const mt=joulesToMt(E), R=blastRadius(E), cas=casualties(R,pop);
+      let prevented=0;
+      if(strat==="deflect") prevented=cas*0.7;
+      if(strat==="fragment") prevented=cas*0.5;
+      if(strat==="evacuate") prevented=cas*0.4;
+      resultsDiv.innerText=dict[lang].results(mt,R,cas,prevented);
+      resultsDiv.classList.add("show");
+    }
+
+    // UI bindings
+    document.getElementById("customBtn").onclick=()=>{
+      document.getElementById("customPanel").style.display="block";
+      document.getElementById("historyPanel").style.display="none";
+    };
+    document.getElementById("historyBtn").onclick=()=>{
+      document.getElementById("customPanel").style.display="none";
+      document.getElementById("historyPanel").style.display="block";
+    };
+    document.querySelectorAll("#historyPanel button").forEach(btn=>{
+      btn.onclick=()=>{
+        selectedAsteroid={
+          d:+btn.dataset.d,
+          v:+btn.dataset.v,
+          rho:+btn.dataset.rho,
+          pop:+btn.dataset.pop
+        };
+      };
+    });
+    document.querySelectorAll(".stratBtn").forEach(btn=>{
+      btn.onclick=()=>{
+        // update selectedAsteroid if from custom inputs
+        if(document.getElementById("customPanel").style.display==="block"){
+          selectedAsteroid={
+            d:+document.getElementById("diameter").value,
+            v:+document.getElementById("velocity").value,
+            rho:+document.getElementById("density").value,
+            pop:+document.getElementById("popdensity").value
+          };
+        }
+        meteorEl.style.opacity=1;
+        runSimulation(btn.dataset.strat);
+      };
+    });
+
+    // Theme & lang
+    document.getElementById("themeBtn").onclick=()=>{
+      const body=document.body;
+      const dark=body.getAttribute("data-theme")==="dark";
+      body.setAttribute("data-theme",dark?"light":"dark");
+    };
+    document.getElementById("langBtn").onclick=()=>{
+      lang=(lang==="en"?"ar":"en");
+      applyLang();
+    };
+
+    function applyLang(){
+      document.getElementById("title").innerText=dict[lang].title;
+      document.getElementById("customBtn").innerText=dict[lang].custom;
+      document.getElementById("historyBtn").innerText=dict[lang].history;
+      document.getElementById("strategyTitle").innerText=dict[lang].strategyTitle;
+      document.querySelectorAll(".stratBtn").forEach(btn=>{
+        btn.innerText=dict[lang].strat[btn.dataset.strat];
+      });
+      document.getElementById("tip").innerText=dict[lang].tip;
+      // re-render results if visible
+      if(resultsDiv.classList.contains("show")){
+        const text=resultsDiv.innerText;
+        // We can just re-run simulation with last data
+        resultsDiv.innerText=""; // clear
+        setTimeout(()=>showResults("last"),10);
+      }
+    }
+  </script>
 </body>
 </html>
