@@ -1,303 +1,677 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Asteroid Impact Simulator</title>
-  <style>
-    :root {
-      --bg: #111;
-      --fg: #eee;
-      --accent: #4cafef;
-    }
-    [data-theme="light"] {
-      --bg: #f8f8f8;
-      --fg: #111;
-      --accent: #0077cc;
-    }
-    body {
-      background: var(--bg);
-      color: var(--fg);
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      transition: background 0.5s, color 0.5s;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      padding: 1em;
-      background: rgba(0,0,0,0.2);
-    }
-    button {
-      padding: 0.5em 1em;
-      border: none;
-      margin: 0.2em;
-      border-radius: 8px;
-      background: var(--accent);
-      color: white;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    button:hover { transform: scale(1.05); }
-    h1 { text-align: center; }
-    .panel {
-      max-width: 800px;
-      margin: 1em auto;
-      padding: 1em;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.05);
-    }
-    .results {
-      overflow: hidden;
-      transition: max-height 0.6s ease, padding 0.6s ease;
-      max-height: 0;
-      padding: 0 1em;
-      white-space: pre-line;
-    }
-    .results.show {
-      max-height: 500px;
-      padding: 1em;
-    }
-    .anim-area {
-      position: relative;
-      height: 200px;
-      margin: 1em 0;
-      background: radial-gradient(circle at center, #223 30%, #112 100%);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .earth {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: blue;
-      box-shadow: 0 0 20px rgba(0,0,255,0.7);
-    }
-    .meteor {
-      position: absolute;
-      top: -40px;
-      left: -40px;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: orange;
-      box-shadow: 0 0 20px rgba(255,140,0,0.9);
-    }
-    .explosion {
-      position: absolute;
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background: radial-gradient(circle, yellow, red, transparent);
-      opacity: 0;
-      pointer-events: none;
-    }
-    .tip {
-      font-size: 0.9em;
-      opacity: 0.7;
-      margin-top: 1em;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Asteroid Defense — Animated</title>
+<style>
+  /* ---------- Theme + Reset ---------- */
+  :root{
+    --bg:#04101a;--card:#0f1724;--muted:#8aa3b6;--accent:#38bdf8;--accent-2:#7c3aed;
+    --danger:#fb7185;--text:#e6f2fb;--glass:rgba(255,255,255,0.03);--success:#34d399;
+    --shadow:0 10px 30px rgba(2,6,23,0.6);
+  }
+  [data-theme="light"]{
+    --bg:#f5f7fb;--card:#ffffff;--muted:#6b7280;--accent:#2563eb;--accent-2:#7c3aed;
+    --danger:#dc2626;--text:#0b1220;--glass:rgba(2,6,23,0.03);--success:#059669;--shadow:0 12px 36px rgba(2,6,23,0.06);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+  .app{max-width:1100px;margin:24px auto;padding:18px;display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}
+  @media (max-width:980px){.app{grid-template-columns:1fr;padding:12px}}
+  .panel{background:linear-gradient(180deg,var(--card),color-mix(in srgb,var(--card) 88%, rgba(255,255,255,0.01)));padding:14px;border-radius:12px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,0.02)}
+  header.controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  h1{font-size:18px;margin:0}
+  .subtitle{font-size:13px;color:var(--muted)}
+
+  /* ---------- Left column UI ---------- */
+  .logo{width:44px;height:44;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:var(--shadow)}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .btn{cursor:pointer;padding:8px 12px;border-radius:10px;border:0;background:var(--accent);color:#04202b;font-weight:700;transition:transform .18s,box-shadow .18s}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--text);font-weight:600}
+  .btn.small{padding:6px 8px;font-size:13px}
+  .section{margin-bottom:12px}
+  label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
+
+  /* preset cards */
+  .preset-list{display:grid;gap:8px;margin-top:10px;max-height:220px;overflow:auto;padding-right:6px}
+  .preset-card{background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);display:flex;gap:8px;align-items:center;cursor:pointer;transition:transform .22s,box-shadow .22s}
+  .preset-card:hover{transform:translateY(-6px);box-shadow:0 12px 36px rgba(0,0,0,0.5)}
+  .preset-icon{width:44px;height:44;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:800}
+  .preset-meta .title{font-weight:700}
+  .preset-meta .desc{font-size:12px;color:var(--muted);margin-top:4px}
+
+  /* sliders + number */
+  .input-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+  input[type=range]{-webkit-appearance:none;width:100%;height:10px;border-radius:8px;background:linear-gradient(90deg,var(--accent),var(--accent-2));outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:white;box-shadow:0 6px 18px rgba(2,6,23,0.3)}
+  .num{width:96px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
+
+  /* strategies */
+  .strategies{display:flex;gap:8px;margin-top:8px}
+  .strategy{flex:1;padding:10px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);cursor:pointer;border:1px solid rgba(255,255,255,0.02);text-align:center;transition:transform .18s,box-shadow .18s}
+  .strategy.selected{box-shadow:0 12px 36px rgba(56,189,248,0.08);transform:translateY(-6px);border-color:rgba(56,189,248,0.18)}
+  .strategy .k{font-weight:800;margin-bottom:6px}
+
+  /* ---------- Right column play area ---------- */
+  .play{display:flex;flex-direction:column;gap:12px}
+  .sky{height:420px;border-radius:12px;position:relative;overflow:hidden;background:linear-gradient(180deg,#062033 0%, #041024 100%);box-shadow:var(--shadow);border:1px solid rgba(255,255,255,0.02)}
+  .ground{height:110px;background:linear-gradient(180deg,#05202b,#02161a);display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:0 0 12px 12px}
+  .hud{position:absolute;left:12px;top:12px;background:rgba(1,6,12,0.45);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);font-size:13px;color:var(--muted)}
+  .stats{position:absolute;right:12px;top:12px;text-align:right;color:var(--muted);font-size:13px}
+
+  .asteroid{position:absolute;width:48px;height:48px;border-radius:50%;background:conic-gradient(#8b5e34,#6b3f1d);box-shadow:0 10px 32px rgba(0,0,0,0.6);transform:translate(-50%,-50%) scale(.9);will-change:transform}
+  .trail{position:absolute;left:50%;top:0;width:12px;height:220px;border-radius:8px;filter:blur(8px);opacity:.85;transform:translateX(-50%);pointer-events:none}
+  .explosion{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;border-radius:50%;mix-blend-mode:screen}
+
+  /* results panel auto-grow using JS measured height + fade-in lines */
+  .result-panel{padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);transition:all .35s cubic-bezier(.2,.9,.3,1);min-height:48px;white-space:pre-wrap;overflow-wrap:break-word}
+  .result-line{opacity:0;transform:translateY(6px);animation:lineIn .45s forwards}
+  @keyframes lineIn{to{opacity:1;transform:translateY(0)}}
+
+  .small{font-size:13px;color:var(--muted)}
+  .micro{transition:transform .12s ease,color .12s ease;display:inline-block}
+  .micro:active{transform:scale(.96)}
+  [dir="rtl"]{direction:rtl}
+  [dir="rtl"] .row{flex-direction:row-reverse}
+</style>
 </head>
-<body data-theme="dark">
-  <header>
-    <div>
-      <button id="themeBtn">🌙</button>
-      <button id="langBtn">AR</button>
+<body data-theme="dark" dir="ltr">
+  <div class="app">
+
+    <!-- LEFT: Controls -->
+    <div class="panel">
+      <div class="section row" style="justify-content:space-between;align-items:center">
+        <div class="row">
+          <div class="logo">AD</div>
+          <div style="margin-left:8px">
+            <h1 id="appTitle">Asteroid Defense</h1>
+            <div class="subtitle small" id="subtitle">Create, choose and defend — animated</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <button id="themeToggle" class="btn ghost micro" title="Toggle theme">🌙</button>
+          <button id="langToggle" class="btn ghost micro" title="Toggle language">EN</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="row">
+          <button id="btnCustom" class="btn">🌌 Create Your Own</button>
+          <button id="btnHistory" class="btn ghost">☄️ Historical Impacts</button>
+        </div>
+      </div>
+
+      <div class="section" id="customArea">
+        <label id="label_diameter">Diameter (m)</label>
+        <div class="input-row">
+          <input id="diamRange" type="range" min="1" max="10000" value="100">
+          <input id="diamNum" class="num" type="number" min="1" max="10000" value="100">
+        </div>
+
+        <label id="label_velocity">Velocity (km/s)</label>
+        <div class="input-row">
+          <input id="velRange" type="range" min="1" max="70" value="20">
+          <input id="velNum" class="num" type="number" min="1" max="70" value="20">
+        </div>
+
+        <label id="label_density">Density (kg/m³)</label>
+        <div class="input-row">
+          <input id="denRange" type="range" min="500" max="8000" value="3000">
+          <input id="denNum" class="num" type="number" min="500" max="8000" value="3000">
+        </div>
+
+        <label id="label_pop">Population density (people / km²)</label>
+        <div class="input-row">
+          <input id="popRange" type="range" min="0" max="15000" value="1000">
+          <input id="popNum" class="num" type="number" min="0" max="15000" value="1000">
+        </div>
+      </div>
+
+      <div class="section" id="historyArea" style="display:none">
+        <div class="small" id="historyHint">Pick a historical impact (preview will play)</div>
+        <div class="preset-list" id="presetList"></div>
+      </div>
+
+      <div class="section">
+        <div class="small" id="strategyLabel">Select a mitigation strategy</div>
+        <div class="strategies">
+          <div id="sDeflect" class="strategy focus-glow"><div class="k">🚀</div><div class="small" id="sDeflectLabel">Deflect</div></div>
+          <div id="sFragment" class="strategy focus-glow"><div class="k">💥</div><div class="small" id="sFragmentLabel">Fragment</div></div>
+          <div id="sEvacuate" class="strategy focus-glow"><div class="k">🏃</div><div class="small" id="sEvacuateLabel">Evacuate</div></div>
+        </div>
+      </div>
+
+      <div class="section row" style="justify-content:space-between">
+        <button id="launchBtn" class="btn">▶️ Simulate</button>
+        <button id="resetBtn" class="btn ghost">Reset</button>
+      </div>
+
+      <div class="section small" id="tipText">Tip: you can drag sliders or type numbers. Use the theme and language toggles (top-right).</div>
     </div>
-  </header>
 
-  <h1 id="title">🌍 Asteroid Impact Simulator</h1>
+    <!-- RIGHT: Play area -->
+    <div class="play">
+      <div class="sky panel" id="sky">
+        <div class="hud" id="hud">Status: idle</div>
+        <div class="stats" id="stats">
+          <div id="energyText">Energy: —</div>
+          <div id="blastText">Blast radius: —</div>
+          <div id="casText">Casualties: —</div>
+        </div>
 
-  <div class="panel">
-    <button id="customBtn">🌌 Create Your Own Meteor</button>
-    <button id="historyBtn">☄️ Historical Impacts</button>
+        <!-- animated elements -->
+        <div id="asteroid" class="asteroid" style="display:none"></div>
+        <canvas id="trail" class="trail" width="12" height="360" style="display:none"></canvas>
+        <div id="explosion" class="explosion" style="display:none"></div>
 
-    <div id="customPanel" style="display:none; margin-top:1em;">
-      <label>Diameter (m): <input type="number" id="diameter" value="100"></label><br>
-      <label>Velocity (km/s): <input type="number" id="velocity" value="20"></label><br>
-      <label>Density (kg/m³): <input type="number" id="density" value="3000"></label><br>
-      <label>Population Density (per km²): <input type="number" id="popdensity" value="1000"></label><br>
-    </div>
+        <!-- subtle background svg -->
+        <svg style="position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen;opacity:.04">
+          <defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#38bdf8"/></linearGradient></defs>
+          <circle cx="60" cy="60" r="180" fill="url(#g1)"/>
+        </svg>
+      </div>
 
-    <div id="historyPanel" style="display:none; margin-top:1em;">
-      <button data-d="20" data-v="19" data-rho="3300" data-pop="1000">Chelyabinsk 2013</button>
-      <button data-d="50" data-v="27" data-rho="3000" data-pop="5">Tunguska 1908</button>
-      <button data-d="10000" data-v="20" data-rho="2500" data-pop="50">Chicxulub 66Mya</button>
+      <div class="ground panel" id="ground">
+        <div>
+          <div class="small">Result summary</div>
+          <div id="resultPanel" class="result-panel">No run yet — run the simulation to see results.</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small">Score</div>
+          <div id="score" style="font-size:22px;font-weight:800;color:var(--accent)">—</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="panel">
-    <h3 id="strategyTitle">Select a mitigation strategy</h3>
-    <button class="stratBtn" data-strat="deflect">Deflect</button>
-    <button class="stratBtn" data-strat="fragment">Fragment</button>
-    <button class="stratBtn" data-strat="evacuate">Evacuate</button>
-  </div>
+<script>
+(() => {
+  /* ---------- data, dictionary ---------- */
+  const PRESETS = [
+    { id:'chelyabinsk', emoji:'☄️', en:{title:'Chelyabinsk 2013',desc:'~20 m airburst over Russia'}, ar:{title:'تشيليابنسك 2013',desc:'انفجار جوي ~20 م فوق روسيا'}, diameter:20, velocity:19, density:3000, pop:4200 },
+    { id:'tunguska', emoji:'🔥', en:{title:'Tunguska 1908',desc:'Large airburst flattened forest'}, ar:{title:'تونغوسكا 1908',desc:'انفجار جوي كبير دمر الغابات'}, diameter:60, velocity:15, density:2700, pop:2 },
+    { id:'chicxulub', emoji:'💀', en:{title:'Chicxulub (66Mya)',desc:'Mass-extinction scale impact'}, ar:{title:'تشيكسولوب (منذ 66 مليون سنة)',desc:'اصطدام مقياس انقراض جماعي'}, diameter:10000, velocity:20, density:3000, pop:0 },
+    { id:'barringer', emoji:'🪨', en:{title:'Barringer Crater',desc:'Iron meteorite formed ~1.2 km crater'}, ar:{title:'حفرة بارينجر',desc:'نجم حديدي شكل فوهة ~1.2 كم'}, diameter:50, velocity:12, density:7800, pop:0 },
+    { id:'sikhote', emoji:'🌩️', en:{title:'Sikhote-Alin 1947',desc:'Large iron meteor shower'}, ar:{title:'سيكهوته-ألين 1947',desc:'مطر نيزكي حديدي كبير'}, diameter:5, velocity:12, density:7800, pop:0 }
+  ];
 
-  <div class="panel anim-area">
-    <div class="earth"></div>
-    <div id="meteor" class="meteor"></div>
-    <div id="explosion" class="explosion"></div>
-  </div>
-
-  <div class="panel results" id="results"></div>
-  <p class="tip" id="tip">
-    Tip: you can drag sliders or type numbers. Use the theme and language toggles (top-right).
-  </p>
-
-  <script>
-    // Dictionaries for EN/AR
-    const dict = {
-      en: {
-        title: "🌍 Asteroid Impact Simulator",
-        custom: "🌌 Create Your Own Meteor",
-        history: "☄️ Historical Impacts",
-        strategyTitle: "Select a mitigation strategy",
-        strat: { deflect: "Deflect", fragment: "Fragment", evacuate: "Evacuate" },
-        tip: "Tip: you can drag sliders or type numbers. Use the theme and language toggles (top-right).",
-        results: (mt,R,cas,prev) =>
-          `Energy: ${mt.toFixed(2)} Mt TNT\nBlast radius: ${Math.round(R)} m\nCasualties: ${cas}\nPrevented: ${Math.round(prev)}`
-      },
-      ar: {
-        title: "🌍 محاكي اصطدام الكويكب",
-        custom: "🌌 أنشئ كويكبك الخاص",
-        history: "☄️ اصطدامات تاريخية",
-        strategyTitle: "اختر استراتيجية التخفيف",
-        strat: { deflect: "انحراف", fragment: "تفتيت", evacuate: "إخلاء" },
-        tip: "💡 ملاحظة: يمكنك سحب المنزلقات أو كتابة الأرقام. استخدم أزرار السمة واللغة (أعلى اليمين).",
-        results: (mt,R,cas,prev) =>
-          `الطاقة: ${mt.toFixed(2)} ميغاطن\nنصف قطر الانفجار: ${Math.round(R)} م\nالضحايا: ${cas}\nالمُنقَذون: ${Math.round(prev)}`
-      }
-    };
-
-    let lang = "en";
-    let selectedAsteroid = { d:100, v:20, rho:3000, pop:1000 };
-
-    const resultsDiv = document.getElementById("results");
-    const meteorEl = document.getElementById("meteor");
-    const explosionEl = document.getElementById("explosion");
-
-    function kineticEnergy(d,rho,v){
-      const r = d/2;
-      const vol = (4/3)*Math.PI*Math.pow(r,3);
-      const m = vol*rho;
-      return 0.5*m*v*v;
+  const DICT = {
+    en: {
+      appTitle: 'Asteroid Defense',
+      subtitle: 'Create, choose and defend — animated',
+      tip: 'Tip: you can drag sliders or type numbers. Use the theme and language toggles (top-right).',
+      btnCustom: '🌌 Create Your Own',
+      btnHistory: '☄️ Historical Impacts',
+      historyHint: 'Pick a historical impact (preview will play)',
+      strategyLabel: 'Select a mitigation strategy',
+      strategies: { deflect:'Deflect', fragment:'Fragment', evacuate:'Evacuate' },
+      resultPrefix: 'Results:',
+      ready: 'Status: ready',
+      idle: 'Status: idle'
+    },
+    ar: {
+      appTitle: 'الدفاع عن الأرض',
+      subtitle: 'أنشئ، اختر، واحمِ — مع تأثيرات متحركة',
+      tip: '💡 ملاحظة: يمكنك سحب المنزلقات أو كتابة الأرقام. استخدم أزرار السمة واللغة (أعلى اليمين).',
+      btnCustom: '🌌 أنشئ كويكبك الخاص',
+      btnHistory: '☄️ اصطدامات تاريخية',
+      historyHint: 'اختر اصطدامًا تاريخيًا (سيعمل المعاينة)',
+      strategyLabel: 'اختر استراتيجية التخفيف',
+      strategies: { deflect:'انحراف', fragment:'تفتيت', evacuate:'إخلاء' },
+      resultPrefix: 'النتائج:',
+      ready: 'الحالة: جاهز',
+      idle: 'الحالة: خامل'
     }
-    function joulesToMt(E){ return E/4.184e15; }
-    function blastRadius(E){ return 60*Math.pow(E/1e12,1/3); }
-    function casualties(R,pop){ return Math.round(Math.PI*Math.pow(R/1000,2)*pop*0.02); }
+  };
 
-    function runSimulation(strat){
-      // Animate meteor
-      meteorEl.style.transition = "none";
-      meteorEl.style.top = "-40px"; meteorEl.style.left = "-40px";
-      setTimeout(()=>{
-        meteorEl.style.transition = "top 2s linear, left 2s linear";
-        meteorEl.style.top = "120px"; meteorEl.style.left = "calc(50% - 20px)";
-      },50);
+  /* ---------- DOM refs ---------- */
+  const body = document.body;
+  const appTitle = document.getElementById('appTitle');
+  const subtitle = document.getElementById('subtitle');
+  const langToggle = document.getElementById('langToggle');
+  const themeToggle = document.getElementById('themeToggle');
+  const tipText = document.getElementById('tipText');
 
-      meteorEl.addEventListener("transitionend", ()=>{
-        if(strat==="deflect"){
-          meteorEl.style.transition = "top 1.5s linear, left 1.5s linear";
-          meteorEl.style.left = "100%"; meteorEl.style.top = "50px";
-          showResults(strat);
-        } else if(strat==="fragment"){
-          explosionEl.style.left = "calc(50% - 50px)";
-          explosionEl.style.top = "60px";
-          explosionEl.style.opacity = 1;
-          setTimeout(()=>explosionEl.style.opacity=0,1000);
-          meteorEl.style.opacity=0;
-          showResults(strat);
-        } else {
-          explosionEl.style.left = "calc(50% - 50px)";
-          explosionEl.style.top = "100px";
-          explosionEl.style.opacity = 1;
-          setTimeout(()=>explosionEl.style.opacity=0,1000);
-          meteorEl.style.opacity=0;
-          showResults(strat);
-        }
-      }, {once:true});
-    }
+  const btnCustom = document.getElementById('btnCustom');
+  const btnHistory = document.getElementById('btnHistory');
+  const customArea = document.getElementById('customArea');
+  const historyArea = document.getElementById('historyArea');
+  const presetList = document.getElementById('presetList');
 
-    function showResults(strat){
-      const d=selectedAsteroid.d, v=selectedAsteroid.v*1000, rho=selectedAsteroid.rho, pop=selectedAsteroid.pop;
-      const E=kineticEnergy(d,rho,v);
-      const mt=joulesToMt(E), R=blastRadius(E), cas=casualties(R,pop);
-      let prevented=0;
-      if(strat==="deflect") prevented=cas*0.7;
-      if(strat==="fragment") prevented=cas*0.5;
-      if(strat==="evacuate") prevented=cas*0.4;
-      resultsDiv.innerText=dict[lang].results(mt,R,cas,prevented);
-      resultsDiv.classList.add("show");
-    }
+  const diamRange = document.getElementById('diamRange');
+  const diamNum = document.getElementById('diamNum');
+  const velRange = document.getElementById('velRange');
+  const velNum = document.getElementById('velNum');
+  const denRange = document.getElementById('denRange');
+  const denNum = document.getElementById('denNum');
+  const popRange = document.getElementById('popRange');
+  const popNum = document.getElementById('popNum');
 
-    // UI bindings
-    document.getElementById("customBtn").onclick=()=>{
-      document.getElementById("customPanel").style.display="block";
-      document.getElementById("historyPanel").style.display="none";
-    };
-    document.getElementById("historyBtn").onclick=()=>{
-      document.getElementById("customPanel").style.display="none";
-      document.getElementById("historyPanel").style.display="block";
-    };
-    document.querySelectorAll("#historyPanel button").forEach(btn=>{
-      btn.onclick=()=>{
-        selectedAsteroid={
-          d:+btn.dataset.d,
-          v:+btn.dataset.v,
-          rho:+btn.dataset.rho,
-          pop:+btn.dataset.pop
-        };
-      };
+  const sDeflect = document.getElementById('sDeflect');
+  const sFragment = document.getElementById('sFragment');
+  const sEvacuate = document.getElementById('sEvacuate');
+
+  const launchBtn = document.getElementById('launchBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  const hud = document.getElementById('hud');
+  const asteroid = document.getElementById('asteroid');
+  const trail = document.getElementById('trail');
+  const explosion = document.getElementById('explosion');
+
+  const energyText = document.getElementById('energyText');
+  const blastText = document.getElementById('blastText');
+  const casText = document.getElementById('casText');
+
+  const resultPanel = document.getElementById('resultPanel');
+  const scoreEl = document.getElementById('score');
+
+  /* ---------- state ---------- */
+  let language = 'en';
+  let selectedStrategy = null;
+  let selectedPreset = null;
+  let lastResult = null; // store results so we can re-render on language change
+  let animRunning = false;
+
+  /* ---------- helpers: sliders <-> numbers ---------- */
+  function bindRangeNumber(rangeEl, numEl){
+    rangeEl.addEventListener('input', ()=>{
+      numEl.value = rangeEl.value;
+      glow(rangeEl);
     });
-    document.querySelectorAll(".stratBtn").forEach(btn=>{
-      btn.onclick=()=>{
-        // update selectedAsteroid if from custom inputs
-        if(document.getElementById("customPanel").style.display==="block"){
-          selectedAsteroid={
-            d:+document.getElementById("diameter").value,
-            v:+document.getElementById("velocity").value,
-            rho:+document.getElementById("density").value,
-            pop:+document.getElementById("popdensity").value
-          };
-        }
-        meteorEl.style.opacity=1;
-        runSimulation(btn.dataset.strat);
-      };
+    numEl.addEventListener('input', ()=>{
+      if(numEl.value === '') return;
+      rangeEl.value = numEl.value;
+      glow(rangeEl);
     });
+  }
+  function glow(el){
+    el.style.boxShadow = '0 8px 28px rgba(56,189,248,0.08)';
+    setTimeout(()=>el.style.boxShadow = '', 240);
+  }
+  bindRangeNumber(diamRange, diamNum);
+  bindRangeNumber(velRange, velNum);
+  bindRangeNumber(denRange, denNum);
+  bindRangeNumber(popRange, popNum);
 
-    // Theme & lang
-    document.getElementById("themeBtn").onclick=()=>{
-      const body=document.body;
-      const dark=body.getAttribute("data-theme")==="dark";
-      body.setAttribute("data-theme",dark?"light":"dark");
-    };
-    document.getElementById("langBtn").onclick=()=>{
-      lang=(lang==="en"?"ar":"en");
-      applyLang();
-    };
+  /* ---------- physics (educational approximations) ---------- */
+  function kineticEnergyJ(diameter_m, density_kgm3, velocity_ms) {
+    const r = diameter_m / 2;
+    const volume = (4/3) * Math.PI * r*r*r;
+    const mass = volume * density_kgm3;
+    return 0.5 * mass * velocity_ms * velocity_ms;
+  }
+  function joulesToMegatons(joules){ return joules / 4.184e15; }
+  function blastRadiusMeters(energyJ){ const k = 60; return k * Math.pow(energyJ / 1e12, 1/3); }
+  function estimateCasualties(blastRadius_m, populationDensity_per_km2){ const area_km2 = Math.PI * Math.pow(blastRadius_m/1000,2); return Math.round(area_km2 * populationDensity_per_km2 * 0.02); }
 
-    function applyLang(){
-      document.getElementById("title").innerText=dict[lang].title;
-      document.getElementById("customBtn").innerText=dict[lang].custom;
-      document.getElementById("historyBtn").innerText=dict[lang].history;
-      document.getElementById("strategyTitle").innerText=dict[lang].strategyTitle;
-      document.querySelectorAll(".stratBtn").forEach(btn=>{
-        btn.innerText=dict[lang].strat[btn.dataset.strat];
+  /* ---------- presets rendering ---------- */
+  function renderPresets(){
+    presetList.innerHTML = '';
+    PRESETS.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'preset-card';
+      const title = (language === 'ar') ? p.ar.title : p.en.title;
+      const desc = (language === 'ar') ? p.ar.desc : p.en.desc;
+      card.innerHTML = `<div class="preset-icon">${p.emoji}</div>
+                        <div class="preset-meta"><div class="title">${title}</div><div class="desc small">${desc}</div></div>`;
+      card.addEventListener('click', ()=>{
+        // visually select
+        presetList.querySelectorAll('.preset-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedPreset = p;
+        // fill inputs
+        diamRange.value = p.diameter; diamNum.value = p.diameter;
+        velRange.value = p.velocity; velNum.value = p.velocity;
+        denRange.value = p.density; denNum.value = p.density;
+        popRange.value = p.pop; popNum.value = p.pop;
+        // preview animation
+        previewPreset(p);
       });
-      document.getElementById("tip").innerText=dict[lang].tip;
-      // re-render results if visible
-      if(resultsDiv.classList.contains("show")){
-        const text=resultsDiv.innerText;
-        // We can just re-run simulation with last data
-        resultsDiv.innerText=""; // clear
-        setTimeout(()=>showResults("last"),10);
+      presetList.appendChild(card);
+    });
+  }
+  renderPresets();
+
+  /* ---------- UI: language & theme ---------- */
+  function applyLanguage(){
+    // text elements
+    appTitle.innerText = DICT[language].appTitle;
+    subtitle.innerText = DICT[language].subtitle;
+    tipText.innerText = DICT[language].tip;
+    btnCustom.innerText = DICT[language].btnCustom;
+    btnHistory.innerText = DICT[language].btnHistory;
+    document.getElementById('historyHint').innerText = DICT[language].historyHint;
+    document.getElementById('strategyLabel').innerText = DICT[language].strategyLabel;
+    document.getElementById('sDeflectLabel').innerText = DICT[language].strategies.deflect;
+    document.getElementById('sFragmentLabel').innerText = DICT[language].strategies.fragment;
+    document.getElementById('sEvacuateLabel').innerText = DICT[language].strategies.evacuate;
+    // preset titles/descriptions
+    renderPresets();
+    // re-render results if exist
+    if(lastResult) renderResults(lastResult);
+    // set direction
+    document.body.dir = (language === 'ar') ? 'rtl' : 'ltr';
+    langToggle.innerText = language === 'en' ? 'AR' : 'EN';
+  }
+  langToggle.addEventListener('click', ()=>{
+    language = language === 'en' ? 'ar' : 'en';
+    applyLanguage();
+  });
+
+  themeToggle.addEventListener('click', ()=>{
+    const cur = body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    body.setAttribute('data-theme', cur === 'light' ? 'dark' : 'light');
+    themeToggle.textContent = body.getAttribute('data-theme') === 'light' ? '☀️' : '🌙';
+  });
+
+  /* ---------- preset preview animation ---------- */
+  const trailCtx = trail.getContext('2d');
+  function drawTrail(intensity){
+    trailCtx.clearRect(0,0,trail.width,trail.height);
+    const g = trailCtx.createLinearGradient(6,0,6,trail.height);
+    g.addColorStop(0, `rgba(255,220,120,${intensity})`);
+    g.addColorStop(1, 'rgba(255,120,30,0)');
+    trailCtx.fillStyle = g;
+    trailCtx.fillRect(0,0,trail.width,trail.height);
+  }
+
+  let animLock = false;
+  function animateAsteroid({duration=2000, onImpact, sway=120}) {
+    if(animLock) return;
+    animLock = true;
+    asteroid.style.display = 'block';
+    trail.style.display = 'block';
+    drawTrail(0.9);
+    const start = performance.now();
+    const startTop = -80;
+    const endTop = sky.clientHeight - 160;
+    function step(now){
+      const t = Math.min(1,(now-start)/duration);
+      const ease = 1 - Math.pow(1-t,3);
+      const top = startTop + (endTop - startTop)*ease;
+      const leftOffset = Math.sin(t*Math.PI*2)*sway*(1-t);
+      asteroid.style.top = `${top}px`;
+      asteroid.style.left = `calc(50% + ${leftOffset}px)`;
+      trail.style.top = `${top+20}px`;
+      trail.style.left = `calc(50% + ${leftOffset-6}px)`;
+      drawTrail(0.9*(1-t));
+      if(t < 1) requestAnimationFrame(step);
+      else {
+        asteroid.style.display='none';
+        trail.style.display='none';
+        animLock = false;
+        if(onImpact) onImpact();
       }
     }
-  </script>
+    requestAnimationFrame(step);
+  }
+
+  function showExplosion(intensity){
+    explosion.style.display = 'block';
+    const max = Math.min(520, Math.round(120 + intensity/20));
+    explosion.style.width = `${max}px`;
+    explosion.style.height = `${max}px`;
+    explosion.style.left = '50%';
+    explosion.style.top = `${sky.clientHeight - 220}px`;
+    explosion.style.background = `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,200,120,0.9) 28%, rgba(255,130,50,0.6) 48%, transparent 70%)`;
+    explosion.style.boxShadow = `0 0 ${Math.round(max/2)}px rgba(255,150,60,0.6)`;
+    explosion.style.opacity = '1';
+    explosion.animate([{opacity:1, transform:'translateX(-50%) scale(0.4)'},{opacity:0, transform:'translateX(-50%) scale(1.3)'}], {duration:900, easing:'cubic-bezier(.2,.9,.3,1)'});
+    setTimeout(()=>{ explosion.style.display='none'; },950);
+  }
+
+  function previewPreset(preset){
+    hud.textContent = (language==='ar') ? `معاينة: ${preset.en.title}` : `Preview: ${preset.en.title}`;
+    animateAsteroid({duration:900, onImpact: ()=>{ showExplosion(Math.min(600, preset.diameter * preset.velocity)); hud.textContent = (language==='ar') ? 'معاينة اكتملت' : 'Preview complete'; setTimeout(()=>hud.textContent = (language==='ar')? DICT[language].ready : DICT[language].ready, 700); }});
+  }
+
+  /* ---------- strategies selection ---------- */
+  [sDeflect, sFragment, sEvacuate].forEach(el=>{
+    el.addEventListener('click', ()=>{
+      [sDeflect, sFragment, sEvacuate].forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      if(el === sDeflect) selectedStrategy = 'deflect';
+      if(el === sFragment) selectedStrategy = 'fragment';
+      if(el === sEvacuate) selectedStrategy = 'evacuate';
+    });
+  });
+
+  /* ---------- run simulation ---------- */
+  function renderResults(resultObj){
+    // store to lastResult for language re-render
+    lastResult = resultObj;
+    const lines = [];
+    if(language === 'ar'){
+      lines.push('النتائج:');
+      lines.push(`القطر: ${resultObj.diameter} م`);
+      lines.push(`السرعة: ${resultObj.velocity} كم/ث`);
+      lines.push(`الكثافة: ${resultObj.density} كغ/م³`);
+      lines.push(`الكثافة السكانية: ${resultObj.pop} /كم²`);
+      lines.push(`الطاقة: ${resultObj.megatons.toFixed(3)} ميغاطن TNT`);
+      lines.push(`نصف قطر الانفجار: ${Math.round(resultObj.blastRadius)} م`);
+      lines.push(`الضحايا (بدون إجراء): ${resultObj.casualties.toLocaleString()}`);
+      lines.push(`الضحايا المتوقع إنقاذهم: ${resultObj.prevented.toLocaleString()}`);
+      lines.push(`الاستراتيجية: ${resultObj.strategy === 'deflect' ? 'التحويل' : resultObj.strategy==='fragment' ? 'التفتيت' : 'الإخلاء'}`);
+    } else {
+      lines.push('Results:');
+      lines.push(`Diameter: ${resultObj.diameter} m`);
+      lines.push(`Velocity: ${resultObj.velocity} km/s`);
+      lines.push(`Density: ${resultObj.density} kg/m³`);
+      lines.push(`Population density: ${resultObj.pop} /km²`);
+      lines.push(`Energy: ${resultObj.megatons.toFixed(3)} Mt TNT`);
+      lines.push(`Blast radius: ${Math.round(resultObj.blastRadius)} m`);
+      lines.push(`Casualties (no action): ${resultObj.casualties.toLocaleString()}`);
+      lines.push(`Casualties prevented: ${resultObj.prevented.toLocaleString()}`);
+      lines.push(`Strategy: ${resultObj.strategy}`);
+    }
+
+    // fill panel with animated lines
+    resultPanel.innerHTML = '';
+    lines.forEach((ln, i) => {
+      const div = document.createElement('div');
+      div.className = 'result-line';
+      div.style.animationDelay = (i * 80) + 'ms';
+      div.textContent = ln;
+      resultPanel.appendChild(div);
+    });
+
+    // auto-resize panel to fit content smoothly using measured height
+    requestAnimationFrame(()=>{
+      resultPanel.style.maxHeight = '0px';
+      resultPanel.style.opacity = '1';
+      const fullHeight = resultPanel.scrollHeight;
+      resultPanel.style.transition = 'max-height 420ms cubic-bezier(.2,.9,.3,1), padding 350ms';
+      resultPanel.style.maxHeight = fullHeight + 'px';
+    });
+
+    // HUD stats
+    energyText.textContent = (language==='ar') ? `الطاقة: ${resultObj.megatons.toFixed(2)} ميغاطن` : `Energy: ${resultObj.megatons.toFixed(2)} Mt`;
+    blastText.textContent = (language==='ar') ? `نصف قطر الانفجار: ${Math.round(resultObj.blastRadius)} م` : `Blast radius: ${Math.round(resultObj.blastRadius)} m`;
+    casText.textContent = (language==='ar') ? `الضحايا: ${resultObj.casualties.toLocaleString()}` : `Casualties: ${resultObj.casualties.toLocaleString()}`;
+
+    // score
+    const score = Math.max(0, Math.round(resultObj.prevented / (resultObj.casualties + 1) * 100));
+    scoreEl.textContent = score + '%';
+  }
+
+  function runSimulation(){
+    if(animLock) return;
+    // collect parameters from UI
+    const diameter = Number(diamNum.value);
+    const velocity = Number(velNum.value); // km/s
+    const density = Number(denNum.value);
+    const pop = Number(popNum.value);
+
+    if(!selectedStrategy){
+      alert(language === 'ar' ? 'اختر استراتيجية أولاً' : 'Choose a strategy first');
+      return;
+    }
+
+    hud.textContent = language === 'ar' ? 'المحاكاة قيد التشغيل…' : 'Simulating…';
+
+    const E = kineticEnergyJ(diameter, density, velocity * 1000);
+    const megatons = joulesToMegatons(E);
+    const blastR = blastRadiusMeters(E);
+    const casualties = estimateCasualties(blastR, pop);
+    let prevented = 0;
+    if(selectedStrategy === 'deflect') prevented = Math.round(casualties * 0.75);
+    if(selectedStrategy === 'fragment') prevented = Math.round(casualties * 0.55);
+    if(selectedStrategy === 'evacuate') prevented = Math.round(casualties * 0.5);
+
+    // store result object (used for re-render on language toggle)
+    const resultObj = {
+      diameter, velocity, density, pop, megatons, blastRadius: blastR, casualties, prevented, strategy: selectedStrategy
+    };
+    lastResult = resultObj;
+
+    // show the cinematic animation depending on strategy, then render results
+    animateAsteroid({
+      duration: 1800,
+      onImpact: () => {
+        if(selectedStrategy === 'deflect'){
+          // show an interceptor rocket that pushes meteor away
+          // emulate by moving meteor off-screen
+          showExplosion(Math.min(2000, E/1e10)); // small flash representing intercept
+          // short delay, then deflect visually
+          setTimeout(()=> {
+            // move meteor away (visual)
+            meteorAway();
+            renderResults(resultObj);
+            hud.textContent = language === 'ar' ? 'المحاكاة انتهت' : 'Simulation complete';
+          }, 450);
+        } else if(selectedStrategy === 'fragment'){
+          // fragment mid-air
+          showExplosion(Math.min(2200, E/1e10));
+          setTimeout(()=> {
+            meteorFragment();
+            renderResults(resultObj);
+            hud.textContent = language === 'ar' ? 'المحاكاة انتهت' : 'Simulation complete';
+          }, 450);
+        } else { // evacuate => impact occurs but prevented casualties smaller
+          showExplosion(Math.min(2500, E/1e10));
+          setTimeout(()=> {
+            meteorImpact();
+            renderResults(resultObj);
+            hud.textContent = language === 'ar' ? 'المحاكاة انتهت' : 'Simulation complete';
+          }, 450);
+        }
+      }
+    });
+
+  }
+
+  /* ---------- small visual helpers for cinematic ---------- */
+  function meteorAway(){
+    // quick animation: move a pseudo-meteor element away to right
+    const elem = document.createElement('div');
+    elem.className = 'asteroid';
+    elem.style.position = 'absolute';
+    elem.style.left = '50%';
+    elem.style.top = `${sky.clientHeight - 200}px`;
+    elem.style.width = '36px'; elem.style.height = '36px';
+    sky.appendChild(elem);
+    // animate
+    elem.animate([{transform:'translateX(-50%) scale(1)'},{transform:'translateX(120vw) scale(.8)'}], {duration:900, easing:'ease-out'});
+    setTimeout(()=> elem.remove(), 1000);
+  }
+
+  function meteorFragment(){
+    // create few small fragments that scatter
+    for(let i=0;i<6;i++){
+      const f = document.createElement('div');
+      f.className = 'asteroid';
+      f.style.width = `${8+Math.random()*16}px`;
+      f.style.height = f.style.width;
+      f.style.opacity = '0.95';
+      f.style.position='absolute';
+      f.style.left = '50%';
+      f.style.top = `${sky.clientHeight - 220}px`;
+      sky.appendChild(f);
+      const dx = (Math.random()*2-1)*400;
+      const dy = 200 + Math.random()*200;
+      f.animate([{transform:'translateX(0) translateY(0) scale(1)'},{transform:`translateX(${dx}px) translateY(${dy}px) scale(.5)`}], {duration:1000+Math.random()*600, easing:'cubic-bezier(.2,.9,.3,1)'});
+      setTimeout(()=>f.remove(), 1800);
+    }
+  }
+
+  function meteorImpact(){
+    // create a hit effect (small ground shake simulation)
+    const g = document.querySelector('.ground');
+    g.animate([{transform:'translateY(0)'},{transform:'translateY(-6px)'},{transform:'translateY(0)'}], {duration:450, easing:'ease-out'});
+  }
+
+  /* ---------- reset ---------- */
+  function resetAll(){
+    // clear selections
+    selectedStrategy = null;
+    [sDeflect, sFragment, sEvacuate].forEach(x=>x.classList.remove('selected'));
+    selectedPreset = null;
+    // reset inputs
+    diamRange.value = 100; diamNum.value = 100;
+    velRange.value = 20; velNum.value = 20;
+    denRange.value = 3000; denNum.value = 3000;
+    popRange.value = 1000; popNum.value = 1000;
+    // reset texts
+    resultPanel.innerHTML = (language==='ar') ? 'لا توجد محاكاة بعد — شغّل المحاكي لمشاهدة النتائج.' : 'No run yet — run the simulation to see results.';
+    resultPanel.style.maxHeight = 'none';
+    scoreEl.textContent = '—';
+    energyText.textContent = (language==='ar') ? 'الطاقة: —' : 'Energy: —';
+    blastText.textContent = (language==='ar') ? 'نصف قطر الانفجار: —' : 'Blast radius: —';
+    casText.textContent = (language==='ar') ? 'الضحايا: —' : 'Casualties: —';
+    hud.textContent = (language === 'ar') ? DICT[language].idle : DICT[language].idle;
+    lastResult = null;
+  }
+
+  resetBtn.addEventListener('click', resetAll);
+
+  /* ---------- UI tab toggles ---------- */
+  btnCustom.addEventListener('click', ()=>{ customArea.style.display='block'; historyArea.style.display='none'; btnCustom.classList.remove('ghost'); btnHistory.classList.add('ghost'); });
+  btnHistory.addEventListener('click', ()=>{ customArea.style.display='none'; historyArea.style.display='block'; btnHistory.classList.remove('ghost'); btnCustom.classList.add('ghost'); });
+
+  /* ---------- launch ---------- */
+  launchBtn.addEventListener('click', runSimulation);
+
+  /* ---------- expose runtime debugging ---------- */
+  window.__AsteroidGame = {
+    runSimulation, resetAll, renderPresets, PRESETS
+  };
+
+  /* ---------- initial setup ---------- */
+  // apply initial language text dictionary
+  function init(){
+    // base dictionary reference for language-specific strings used outside DICT
+    window.DICT = DICT;
+    applyLanguage = () => {
+      // reuse DICT constants above
+      document.getElementById('historyHint').innerText = DICT[language].historyHint;
+      document.getElementById('strategyLabel').innerText = DICT[language].strategyLabel;
+      document.getElementById('sDeflectLabel').innerText = DICT[language].strategies.deflect;
+      document.getElementById('sFragmentLabel').innerText = DICT[language].strategies.fragment;
+      document.getElementById('sEvacuateLabel').innerText = DICT[language].strategies.evacuate;
+      appTitle.innerText = DICT[language].appTitle;
+      subtitle.innerText = DICT[language].subtitle;
+      tipText.innerText = DICT[language].tip;
+      btnCustom.innerText = DICT[language].btnCustom;
+      btnHistory.innerText = DICT[language].btnHistory;
+      langToggle.innerText = language === 'en' ? 'AR' : 'EN';
+      // render presets in active language
+      renderPresets();
+      // re-render results if present
+      if(lastResult) renderResults(lastResult);
+    };
+    // assign applyLanguage globally used earlier
+    window.applyLanguage = () => { /* placeholder, assigned below */ };
+    // now set initial language strings
+    applyLanguage();
+    // initial HUD
+    hud.textContent = DICT[language].idle;
+  }
+  // small wrapper because applyLanguage assigned above
+  init();
+})();
+</script>
 </body>
 </html>
